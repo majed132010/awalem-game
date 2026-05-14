@@ -397,12 +397,45 @@ html,body{height:100%;overflow:hidden;font-family:'Tajawal',sans-serif;backgroun
 <div class="login-overlay" id="loginOverlay">
   <div class="login-box">
     <h2>🔥 عوالم — قبيلتك</h2>
-    <p>سجّل دخولك بأي بريد إلكتروني للانضمام إلى المغامرة</p>
-    <input class="login-inp" id="loginName" placeholder="اسمك (مثال: سامي)" value="">
-    <input class="login-inp" id="loginEmail" placeholder="بريدك الإلكتروني (أي بريد يعمل)" value="" type="email">
+    <p id="authSubtitle">ادخل إلى قبيلتك أو أنشئ حساباً جديداً</p>
+
+    <!-- تبويبات دخول / تسجيل -->
+    <div style="display:flex;gap:.5rem;margin-bottom:1.2rem;background:var(--card2);border-radius:12px;padding:4px">
+      <button id="tabLogin" onclick="switchAuthTab('login')" style="flex:1;padding:.45rem;border:none;border-radius:9px;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;font-family:Tajawal,sans-serif;font-weight:700;font-size:.82rem;cursor:pointer">دخول</button>
+      <button id="tabRegister" onclick="switchAuthTab('register')" style="flex:1;padding:.45rem;border:none;border-radius:9px;background:transparent;color:var(--muted);font-family:Tajawal,sans-serif;font-weight:700;font-size:.82rem;cursor:pointer">حساب جديد</button>
+    </div>
+
+    <!-- حقل الاسم (للتسجيل فقط) -->
+    <div id="nameField" style="display:none">
+      <input class="login-inp" id="loginName" placeholder="اسمك في اللعبة (مثال: سامي)" value="">
+    </div>
+
+    <input class="login-inp" id="loginEmail" placeholder="البريد الإلكتروني" value="" type="email">
+
+    <div style="position:relative">
+      <input class="login-inp" id="loginPass" placeholder="كلمة المرور" type="password" style="padding-left:2.5rem">
+      <span onclick="togglePassVis()" style="position:absolute;left:.7rem;top:50%;transform:translateY(-50%);cursor:pointer;font-size:.9rem;opacity:.5">👁</span>
+    </div>
+
+    <!-- حقل تأكيد كلمة المرور (للتسجيل فقط) -->
+    <div id="confirmField" style="display:none">
+      <input class="login-inp" id="loginPassConfirm" placeholder="تأكيد كلمة المرور" type="password">
+    </div>
+
     <input class="login-inp" id="loginRoom" placeholder="رقم الغرفة (مثال: 1234)" value="1234">
-    <button class="login-btn" onclick="doLogin()">🚀 دخول إلى عوالم</button>
-    <div class="login-small">لا تحتاج تأكيد — أي بريد إلكتروني يعمل مباشرة</div>
+
+    <!-- رسالة الخطأ -->
+    <div id="authError" style="display:none;background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.3);border-radius:10px;padding:.6rem .9rem;font-size:.72rem;color:#ff4757;margin-bottom:.8rem;text-align:right"></div>
+
+    <!-- زر الدخول/التسجيل -->
+    <button class="login-btn" id="authBtn" onclick="doAuth()">🚀 دخول</button>
+
+    <!-- نسيت كلمة المرور -->
+    <div id="forgotWrap" style="margin-top:.6rem">
+      <span onclick="doForgotPassword()" style="font-size:.7rem;color:var(--muted);cursor:pointer;text-decoration:underline;opacity:.7">نسيت كلمة المرور؟</span>
+    </div>
+
+    <div class="login-small" id="authHint">حسابك محفوظ — يمكنك الدخول من أي جهاز</div>
   </div>
 </div>
 
@@ -747,21 +780,26 @@ const FB_CONFIG = {
 
 const FB_READY = true; // Config حقيقي ✅
 
-// تحميل Firebase ديناميكي فقط إذا كان الـ config مكتملاً
+// تحميل Firebase ديناميكي (app + database + auth)
 async function loadFirebase() {
   if (!FB_READY) return false;
-  return new Promise((resolve) => {
-    const s1 = document.createElement('script');
-    s1.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
-    s1.onload = () => {
-      const s2 = document.createElement('script');
-      s2.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js';
-      s2.onload = () => resolve(true);
-      s2.onerror = () => resolve(false);
-      document.head.appendChild(s2);
-    };
-    s1.onerror = () => resolve(false);
-    document.head.appendChild(s1);
+  const needed = [
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js',
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js'
+  ];
+  const loaded = [...document.querySelectorAll('script')].map(s => s.src);
+  const toLoad = needed.filter(u => !loaded.some(l => l.includes(u.split('/').pop())));
+  if (!toLoad.length) { initFirebaseApp(); return true; }
+  return new Promise(resolve => {
+    let done = 0;
+    toLoad.forEach(src => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => { if (++done === toLoad.length) { initFirebaseApp(); resolve(true); } };
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
   });
 }
 class RoomNetwork {
@@ -1215,21 +1253,153 @@ let voiceChat = null;
 let chatVoiceActive = false;
 let gameVoiceActive = false;
 
-function doLogin() {
-  const name = document.getElementById('loginName').value.trim();
+// ==================== FIREBASE AUTH ====================
+let authMode = 'login'; // 'login' | 'register'
+let currentUser = null;
+
+function switchAuthTab(mode) {
+  authMode = mode;
+  const isReg = mode === 'register';
+  document.getElementById('nameField').style.display = isReg ? 'block' : 'none';
+  document.getElementById('confirmField').style.display = isReg ? 'block' : 'none';
+  document.getElementById('forgotWrap').style.display = isReg ? 'none' : 'block';
+  document.getElementById('authBtn').textContent = isReg ? '✨ إنشاء حساب' : '🚀 دخول';
+  document.getElementById('authSubtitle').textContent = isReg ? 'أنشئ حسابك وانضم إلى القبيلة' : 'مرحباً بك — ادخل إلى قبيلتك';
+  document.getElementById('tabLogin').style.background = isReg ? 'transparent' : 'linear-gradient(135deg,var(--g1),var(--g2))';
+  document.getElementById('tabLogin').style.color = isReg ? 'var(--muted)' : '#fff';
+  document.getElementById('tabRegister').style.background = isReg ? 'linear-gradient(135deg,var(--g1),var(--g2))' : 'transparent';
+  document.getElementById('tabRegister').style.color = isReg ? '#fff' : 'var(--muted)';
+  showAuthError('');
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  if (msg) { el.textContent = msg; el.style.display = 'block'; }
+  else { el.style.display = 'none'; }
+}
+
+function togglePassVis() {
+  const p = document.getElementById('loginPass');
+  p.type = p.type === 'password' ? 'text' : 'password';
+}
+
+async function doAuth() {
   const email = document.getElementById('loginEmail').value.trim();
-  const roomId = document.getElementById('loginRoom').value.trim() || '1234';
+  const pass  = document.getElementById('loginPass').value;
+  const room  = document.getElementById('loginRoom').value.trim() || '1234';
+  const btn   = document.getElementById('authBtn');
 
-  if (!name) { toast('❌ أدخل اسمك'); return; }
-  if (!email || !email.includes('@')) { toast('❌ أدخل بريد إلكتروني صالح'); return; }
+  if (!email || !email.includes('@')) { showAuthError('أدخل بريداً إلكترونياً صالحاً'); return; }
+  if (!pass || pass.length < 6)       { showAuthError('كلمة المرور 6 أحرف على الأقل'); return; }
 
+  btn.textContent = '⏳ جاري...';
+  btn.disabled = true;
+  showAuthError('');
+
+  try {
+    const authLib = await loadFirebaseAuth();
+    if (!authLib) throw new Error('auth-load-failed');
+    const auth = firebase.auth();
+
+    if (authMode === 'register') {
+      const name = document.getElementById('loginName').value.trim();
+      const conf = document.getElementById('loginPassConfirm').value;
+      if (!name)        { showAuthError('أدخل اسمك في اللعبة'); btn.textContent='✨ إنشاء حساب'; btn.disabled=false; return; }
+      if (pass !== conf){ showAuthError('كلمتا المرور غير متطابقتين'); btn.textContent='✨ إنشاء حساب'; btn.disabled=false; return; }
+      const cred = await auth.createUserWithEmailAndPassword(email, pass);
+      await cred.user.updateProfile({ displayName: name });
+      currentUser = cred.user;
+      await _saveUserProfile(cred.user, name);
+      _enterGame(name, email, room, cred.user.uid);
+
+    } else {
+      const cred = await auth.signInWithEmailAndPassword(email, pass);
+      currentUser = cred.user;
+      const name = cred.user.displayName || email.split('@')[0];
+      await _saveUserProfile(cred.user, name);
+      _enterGame(name, email, room, cred.user.uid);
+    }
+  } catch(e) {
+    btn.textContent = authMode === 'register' ? '✨ إنشاء حساب' : '🚀 دخول';
+    btn.disabled = false;
+    showAuthError(_authErrMsg(e.code));
+  }
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email || !email.includes('@')) { showAuthError('أدخل بريدك الإلكتروني أولاً'); return; }
+  try {
+    const authLib = await loadFirebaseAuth();
+    await firebase.auth().sendPasswordResetEmail(email);
+    showAuthError('');
+    document.getElementById('authHint').textContent = '📧 تم إرسال رابط استعادة كلمة المرور إلى بريدك';
+    document.getElementById('authHint').style.color = '#2ed573';
+  } catch(e) {
+    showAuthError(_authErrMsg(e.code));
+  }
+}
+
+function _authErrMsg(code) {
+  const msgs = {
+    'auth/user-not-found':       'البريد الإلكتروني غير مسجل — أنشئ حساباً جديداً',
+    'auth/wrong-password':       'كلمة المرور خاطئة',
+    'auth/email-already-in-use': 'هذا البريد مسجّل بالفعل — ادخل من تبويب "دخول"',
+    'auth/weak-password':        'كلمة المرور ضعيفة جداً (6 أحرف على الأقل)',
+    'auth/invalid-email':        'صيغة البريد الإلكتروني غير صحيحة',
+    'auth/too-many-requests':    'محاولات كثيرة — انتظر قليلاً ثم حاول مجدداً',
+    'auth/network-request-failed':'خطأ في الاتصال — تحقق من الإنترنت',
+    'auth-load-failed':          'خطأ في تحميل نظام المصادقة',
+  };
+  return msgs[code] || 'حدث خطأ — حاول مجدداً (' + (code || 'unknown') + ')';
+}
+
+async function _saveUserProfile(user, name) {
+  if (typeof firebase === 'undefined') return;
+  const db = firebase.database();
+  await db.ref('users/' + user.uid).update({
+    name, email: user.email, uid: user.uid,
+    lastSeen: Date.now(), avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(name)
+  });
+}
+
+async function loadFirebaseAuth() {
+  if (typeof firebase !== 'undefined' && firebase.auth) return true;
+  return new Promise(resolve => {
+    // تحميل auth SDK إذا لم يكن محملاً
+    const scripts = [
+      'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
+      'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',
+      'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js'
+    ];
+    let loaded = 0;
+    const alreadyLoaded = [...document.querySelectorAll('script')].map(s => s.src);
+    const toLoad = scripts.filter(s => !alreadyLoaded.some(a => a.includes(s.split('/').pop())));
+    if (toLoad.length === 0) { initFirebaseApp(); resolve(true); return; }
+    toLoad.forEach(src => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => { loaded++; if (loaded === toLoad.length) { initFirebaseApp(); resolve(true); } };
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
+  });
+}
+
+function initFirebaseApp() {
+  if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp(FB_CONFIG);
+  }
+}
+
+function _enterGame(name, email, room, uid) {
   roomNetwork = new RoomNetwork();
-  roomNetwork.join(roomId, name, email);
+  roomNetwork.userId = uid; // استخدم uid الحقيقي
+  roomNetwork.join(room, name, email);
   window.roomNetwork = roomNetwork;
 
   voiceChat = new VoiceChat(roomNetwork);
   window.voiceChat = voiceChat;
-  // إعداد Firebase Signaling بعد الانضمام للغرفة
   setTimeout(() => { if (voiceChat && !voiceChat.sigRef) voiceChat._setupFirebaseSignaling(); }, 1500);
 
   myProfile.name = name;
@@ -1245,7 +1415,7 @@ function doLogin() {
   document.getElementById('setAvatar').src = avatarUrl;
 
   document.getElementById('loginOverlay').style.display = 'none';
-  toast('🎮 مرحباً ' + name + '! انضممت إلى الغرفة ' + roomId);
+  toast('🎮 مرحباً ' + name + '! انضممت إلى الغرفة ' + room);
 
   roomNetwork.onMessage = (data) => {
     if (data.type === 'join') {
@@ -1256,6 +1426,15 @@ function doLogin() {
     }
   };
 }
+
+// تسجيل خروج تلقائي عند إغلاق المتصفح
+window.addEventListener('beforeunload', () => {
+  if (typeof firebase !== 'undefined' && firebase.apps.length) {
+    firebase.auth().signOut().catch(() => {});
+  }
+});
+
+function doLogin() { doAuth(); } // legacy alias
 
 function toggleChatVoice() {
   if (!voiceChat) { toast('🎤 انضم إلى غرفة أولاً'); return; }

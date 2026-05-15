@@ -1,0 +1,2933 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+<title>عوالم — قبيلتك (جماعي)</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!-- Firebase SDK — يُحمل مسبقاً -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060f;--bg2:#0c0c1e;--card:#111128;--card2:#161635;
+  --border:rgba(255,255,255,0.06);--text:#f0eeff;--muted:#5a5878;
+  --g1:#ff6b1a;--g2:#ff9500;--g3:#ffcc44;--ember:#ff3300;--gold:#ffd700;
+  --voice:#2ed573;--voice-off:#ff4757;
+}
+html,body{height:100%;overflow:hidden;font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text)}
+#particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.particle{position:absolute;border-radius:50%;pointer-events:none;animation:particleRise linear forwards;opacity:0}
+@keyframes particleRise{0%{opacity:.9;transform:translateY(0) translateX(0) scale(1)}60%{opacity:.4}100%{opacity:0;transform:translateY(-280px) translateX(var(--dx)) scale(0)}}
+.app{display:grid;grid-template-columns:64px 1fr 300px;grid-template-rows:100vh;height:100vh;position:relative;z-index:1}
+.sidebar{grid-column:1;grid-row:1;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:.8rem 0;gap:.4rem;z-index:10}
+.main{grid-column:2;grid-row:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.panel{grid-column:3;grid-row:1;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:10}
+.sidebar{background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:.8rem 0;gap:.4rem;z-index:10}
+.sb-logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--ember),var(--g2));display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:1rem;cursor:pointer;box-shadow:0 0 20px rgba(255,107,26,.4);transition:transform .2s}
+.sb-logo:hover{transform:scale(1.08)}
+.sb-btn{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--muted);cursor:pointer;transition:all .25s;position:relative}
+.sb-btn:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.sb-btn.on{background:rgba(255,107,26,.12);color:var(--g1);box-shadow:0 0 12px rgba(255,107,26,.2)}
+.sb-badge{position:absolute;top:4px;right:4px;width:14px;height:14px;border-radius:50%;background:var(--ember);font-size:.5rem;font-family:'Space Mono',monospace;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg2)}
+.sb-bottom{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:.4rem}
+.sb-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#7c3aff,#ec4899);display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:800;cursor:pointer;box-shadow:0 0 12px rgba(124,58,255,.35);border:2px solid rgba(124,58,255,.3);transition:transform .2s;overflow:hidden}
+.sb-av:hover{transform:scale(1.1)}
+.sb-av img{width:100%;height:100%;object-fit:cover}
+.main{display:flex;flex-direction:column;overflow:hidden;position:relative}
+.topbar{height:60px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;border-bottom:1px solid var(--border);background:rgba(6,6,15,.85);backdrop-filter:blur(20px);z-index:20}
+.topbar-right{display:flex;align-items:center;gap:1rem}
+.tribe-name{font-size:1rem;font-weight:900;background:linear-gradient(135deg,var(--g1),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:flex;align-items:center;gap:8px}
+.tribe-level{font-size:.65rem;font-family:'Space Mono',monospace;color:var(--muted);background:rgba(255,107,26,.08);border:1px solid rgba(255,107,26,.15);padding:3px 10px;border-radius:100px}
+.topbar-left{display:flex;align-items:center;gap:.6rem}
+.tb-btn{height:32px;padding:0 14px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);font-size:.75rem;font-family:'Tajawal',sans-serif;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.tb-btn:hover{color:var(--text);background:rgba(255,255,255,.07)}
+.tb-btn.challenge{background:rgba(124,58,255,.1);border-color:rgba(124,58,255,.25);color:#a78bfa}
+.tb-btn.challenge:hover{background:rgba(124,58,255,.18);box-shadow:0 0 16px rgba(124,58,255,.2)}
+.tb-btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(60%)}
+.scene{flex:1;position:relative;overflow:hidden;transition:background 1.8s ease;background:radial-gradient(ellipse at 50% 100%,#1a0800 0%,#0a0005 45%,#06060f 100%)}
+.stars{position:absolute;inset:0;z-index:0;background-image:radial-gradient(1px 1px at 12% 8%,rgba(255,255,255,.7) 0%,transparent 100%),radial-gradient(1px 1px at 28% 6%,rgba(255,255,255,.5) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 50% 4%,rgba(255,255,255,.6) 0%,transparent 100%),radial-gradient(1px 1px at 70% 9%,rgba(255,255,255,.7) 0%,transparent 100%),radial-gradient(1px 1px at 85% 5%,rgba(255,255,255,.4) 0%,transparent 100%),radial-gradient(1px 1px at 20% 18%,rgba(255,255,255,.3) 0%,transparent 100%),radial-gradient(1px 1px at 60% 15%,rgba(255,255,255,.4) 0%,transparent 100%),radial-gradient(1px 1px at 42% 22%,rgba(255,200,100,.35) 0%,transparent 100%)}
+.scene-glow{position:absolute;inset:0;z-index:0;pointer-events:none;transition:opacity 1.8s ease;background:radial-gradient(ellipse at 50% 78%,rgba(255,100,0,.22) 0%,rgba(255,60,0,.09) 38%,transparent 65%)}
+.ground{position:absolute;bottom:0;left:0;right:0;height:25%;background:linear-gradient(to top,#0f1a0a,#0a1008 60%,transparent);z-index:1}
+.ground::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,107,26,.35),transparent)}
+.fire-zone{position:absolute;left:50%;bottom:24%;transform:translateX(-50%);z-index:5;display:flex;flex-direction:column;align-items:center}
+.fire-ground-glow{position:absolute;bottom:-16px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,80,0,.65) 0%,transparent 70%);filter:blur(9px);transition:width 1.5s ease,opacity 1.5s ease;animation:gGlow 2s ease-in-out infinite}
+@keyframes gGlow{0%,100%{opacity:.7;transform:scaleX(1)}50%{opacity:1;transform:scaleX(1.18)}}
+.logs{width:112px;height:24px;background:linear-gradient(to bottom,#4a2800,#2d1800);border-radius:14px;position:absolute;bottom:0;box-shadow:0 4px 16px rgba(0,0,0,.6),0 0 28px rgba(255,80,0,.4)}
+.logs::before,.logs::after{content:'';position:absolute;height:13px;width:86px;background:linear-gradient(to bottom,#3d2000,#221200);border-radius:8px;top:50%;left:50%;transform:translate(-50%,-50%) rotate(28deg);box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.logs::after{transform:translate(-50%,-50%) rotate(-28deg)}
+.coal-glow{width:96px;height:16px;background:radial-gradient(ellipse,rgba(255,110,0,.95) 0%,rgba(255,50,0,.65) 40%,transparent 70%);border-radius:50%;position:absolute;bottom:10px;filter:blur(2px);animation:coalB 1.5s ease-in-out infinite}
+@keyframes coalB{0%,100%{opacity:.65}50%{opacity:1}}
+.flames{position:absolute;bottom:20px;display:flex;align-items:flex-end;justify-content:center;width:140px}
+.flame{border-radius:50% 50% 40% 40%/60% 60% 40% 40%;transform-origin:bottom center;position:absolute;bottom:0;left:50%;transition:height 1.3s ease,width 1s ease}
+.fl-o{width:92px;height:132px;background:linear-gradient(to top,rgba(255,50,0,.92),rgba(255,120,0,.72),rgba(255,200,0,.22),transparent);transform:translateX(-50%);filter:blur(3.5px);animation:fd 1.4s ease-in-out infinite}
+.fl-m{width:62px;height:102px;background:linear-gradient(to top,rgba(255,80,0,1),rgba(255,160,0,.88),rgba(255,220,50,.32),transparent);transform:translateX(-50%);filter:blur(1.5px);animation:fd 1.1s .15s ease-in-out infinite}
+.fl-i{width:38px;height:78px;background:linear-gradient(to top,rgba(255,255,200,1),rgba(255,220,80,.92),rgba(255,160,0,.42),transparent);transform:translateX(-50%);filter:blur(.5px);animation:fd .85s .3s ease-in-out infinite}
+.fl-c{width:17px;height:48px;background:linear-gradient(to top,#fff,#fffacc,rgba(255,240,100,0));transform:translateX(-50%);animation:fd .6s .1s ease-in-out infinite}
+@keyframes fd{0%{transform:translateX(-50%) scaleX(1) scaleY(1) rotate(-1deg)}25%{transform:translateX(-50%) scaleX(.91) scaleY(1.07) rotate(1.5deg)}50%{transform:translateX(-50%) scaleX(1.08) scaleY(.96) rotate(-2deg)}75%{transform:translateX(-50%) scaleX(.94) scaleY(1.1) rotate(1deg)}100%{transform:translateX(-50%) scaleX(1) scaleY(1) rotate(-1deg)}}
+.wisp{position:absolute;bottom:34px;width:22px;height:56px;border-radius:50% 50% 40% 40%/60% 60% 40% 40%;background:linear-gradient(to top,rgba(255,80,0,.55),transparent);filter:blur(2.5px)}
+.wisp-l{left:-20px;animation:wL 1.7s ease-in-out infinite}
+.wisp-r{right:-20px;animation:wR 1.9s .4s ease-in-out infinite}
+@keyframes wL{0%,100%{transform:scaleX(1) rotate(-10deg);opacity:.45}50%{transform:scaleX(.8) rotate(9deg);opacity:.78}}
+@keyframes wR{0%,100%{transform:scaleX(1) rotate(10deg);opacity:.45}50%{transform:scaleX(.8) rotate(-9deg);opacity:.78}}
+.fuel-sys{position:absolute;bottom:calc(24% - 30px);left:50%;transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:5px}
+.fuel-lbl{font-size:.58rem;font-family:'Space Mono',monospace;color:rgba(255,150,50,.65);letter-spacing:1px}
+.fuel-wrap{width:220px;height:7px;background:rgba(255,255,255,.06);border-radius:100px;border:1px solid rgba(255,107,26,.12);overflow:hidden}
+.fuel-fill{height:100%;background:linear-gradient(90deg,var(--ember),var(--g2),var(--gold));border-radius:100px;transition:width 1.2s ease;position:relative;overflow:hidden}
+.fuel-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:shimmer 2.2s linear infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+.wood-scene-btn{position:absolute;bottom:calc(24% - 58px);left:50%;transform:translateX(-50%);z-index:7;background:rgba(255,107,26,.12);border:1px solid rgba(255,107,26,.28);color:var(--g2);font-size:.75rem;font-family:'Tajawal',sans-serif;font-weight:700;padding:7px 20px;border-radius:100px;cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:6px;backdrop-filter:blur(10px);white-space:nowrap}
+.wood-scene-btn:hover{background:rgba(255,107,26,.22);border-color:rgba(255,107,26,.5);box-shadow:0 0 22px rgba(255,107,26,.3);transform:translateX(-50%) translateY(-2px)}
+.wood-scene-btn:active{transform:translateX(-50%) translateY(0)}
+.wood-scene-btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(60%);transform:translateX(-50%)}
+.wood-scene-btn:disabled:hover{transform:translateX(-50%);box-shadow:none;background:rgba(255,107,26,.12)}
+.wb-ico{animation:wobble 2.2s ease-in-out infinite;display:inline-block}
+@keyframes wobble{0%,100%{transform:rotate(0)}30%{transform:rotate(-10deg)}70%{transform:rotate(10deg)}}
+.member{position:absolute;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;z-index:4;transition:transform .3s}
+.member:hover{z-index:12}
+.m-av{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;border:2.5px solid rgba(255,255,255,.09);box-shadow:0 4px 22px rgba(0,0,0,.55);transition:all .3s;position:relative;animation:mFloat ease-in-out infinite;overflow:hidden;background:var(--bg2)}
+.m-av img{width:100%;height:100%;object-fit:cover}
+.member.online .m-av{border-color:rgba(46,213,115,.38);box-shadow:0 4px 22px rgba(0,0,0,.55),0 0 14px rgba(46,213,115,.2)}
+.member:not(.online) .m-av{opacity:.48;filter:grayscale(40%)}
+.member:hover .m-av{transform:scale(1.14)!important;opacity:1;filter:brightness(1.15) grayscale(0%)}
+@keyframes mFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.m-dot{position:absolute;bottom:2px;right:2px;width:13px;height:13px;border-radius:50%;background:#2ed573;border:2.5px solid var(--bg);box-shadow:0 0 8px #2ed573;animation:dotP 2s ease-in-out infinite}
+@keyframes dotP{0%,100%{box-shadow:0 0 5px #2ed573}50%{box-shadow:0 0 13px #2ed573}}
+.m-name{font-size:.65rem;font-weight:700;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);padding:2px 10px;border-radius:100px;border:1px solid rgba(255,255,255,.07);white-space:nowrap;letter-spacing:.3px}
+.member:not(.online) .m-name{opacity:.48}
+.wood-chip{position:fixed;font-size:1.3rem;pointer-events:none;z-index:999;animation:woodFly 1.2s ease-out forwards}
+@keyframes woodFly{0%{opacity:1;transform:translateY(0) scale(1)}70%{opacity:.7;transform:translateY(-90px) scale(.7)}100%{opacity:0;transform:translateY(-170px) scale(.3)}}
+.spark{position:fixed;width:5px;height:5px;border-radius:50%;pointer-events:none;z-index:998;animation:sparkFly linear forwards}
+@keyframes sparkFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0)}}
+.daily-hero{position:absolute;bottom:calc(25% + 45px);left:3%;z-index:8;background:rgba(10,8,24,.92);border:1px solid rgba(255,215,0,.22);border-radius:14px;padding:.7rem 1rem;backdrop-filter:blur(16px);animation:bFloat 4s 2s ease-in-out infinite}
+@keyframes bFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.dh-lbl{font-size:.55rem;font-family:'Space Mono',monospace;color:rgba(255,215,0,.5);letter-spacing:1.5px;margin-bottom:.4rem}
+.dh-row{display:flex;align-items:center;gap:.5rem}
+.dh-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#d97706);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;box-shadow:0 0 14px rgba(255,215,0,.4);overflow:hidden}
+.dh-av img{width:100%;height:100%;object-fit:cover}
+.dh-name{font-size:.8rem;font-weight:800}
+.dh-sub{font-size:.6rem;color:var(--muted)}
+.chal-overlay{position:fixed;inset:0;z-index:400;display:none}
+.chal-modal{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-8px);z-index:500;background:rgba(8,7,20,.97);border:1px solid rgba(124,58,255,.3);border-radius:18px;padding:1.5rem 1.6rem 1.4rem;width:360px;backdrop-filter:blur(28px);box-shadow:0 20px 60px rgba(0,0,0,.65),0 0 0 1px rgba(124,58,255,.06);display:none;opacity:0;transition:opacity .22s, transform .22s;pointer-events:none}
+.chal-modal.on{display:block;opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all}
+.chal-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.3rem}
+.chal-title{font-size:1rem;font-weight:900;display:flex;align-items:center;gap:8px}
+.chal-x{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.75rem;transition:all .2s;flex-shrink:0}
+.chal-x:hover{color:var(--text);background:rgba(255,255,255,.1)}
+.chal-sub{font-size:.68rem;color:var(--muted);margin-bottom:1.2rem}
+.chal-lbl{font-size:.58rem;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:1.5px;margin-bottom:.4rem;display:flex;align-items:center;gap:5px}
+.chal-lbl::before{content:'';width:3px;height:10px;background:linear-gradient(#7c3aff,#a78bfa);border-radius:100px}
+.chal-inp{width:100%;background:rgba(255,255,255,.04);border:1.5px solid rgba(124,58,255,.2);border-radius:12px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:.88rem;padding:.65rem 1rem;outline:none;transition:all .3s;margin-bottom:1rem}
+.chal-inp:focus{border-color:rgba(124,58,255,.5);background:rgba(124,58,255,.07);box-shadow:0 0 16px rgba(124,58,255,.1)}
+.chal-inp::placeholder{color:rgba(255,255,255,.14)}
+.chal-games{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem}
+.chal-game{padding:6px 13px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);font-size:.72rem;font-family:'Tajawal',sans-serif;cursor:pointer;transition:all .2s}
+.chal-game:hover{color:var(--text)}
+.chal-game.on{background:rgba(124,58,255,.15);border-color:rgba(124,58,255,.4);color:#a78bfa}
+.chal-check{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;font-size:.75rem;color:var(--muted);cursor:pointer}
+.chal-check input{width:14px;height:14px;accent-color:#7c3aff}
+.chal-acts{display:flex;gap:.6rem;margin-top:.2rem}
+.chal-cancel{padding:10px 16px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);font-family:'Tajawal',sans-serif;font-size:.82rem;cursor:pointer;transition:all .2s}
+.chal-cancel:hover{color:var(--text)}
+.chal-send{flex:1;padding:10px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aff,#5b21b6);color:#fff;font-size:.87rem;font-weight:800;font-family:'Tajawal',sans-serif;cursor:pointer;box-shadow:0 0 20px rgba(124,58,255,.35);transition:all .25s}
+.chal-send:hover{transform:translateY(-2px);box-shadow:0 0 32px rgba(124,58,255,.55)}
+.incoming{position:absolute;bottom:calc(25% + 45px);right:3%;z-index:8;background:rgba(10,8,24,.92);border:1px solid rgba(124,58,255,.3);border-radius:14px;padding:.75rem 1rem;backdrop-filter:blur(16px);animation:bFloat 4s ease-in-out infinite;max-width:200px;transition:opacity .5s}
+.incoming.hid{opacity:0;pointer-events:none}
+.in-lbl{font-size:.55rem;font-family:'Space Mono',monospace;color:rgba(124,58,255,.6);letter-spacing:1.5px;margin-bottom:.35rem}
+.in-name{font-size:.82rem;font-weight:800}
+.in-sub{font-size:.62rem;color:var(--muted);margin-top:2px}
+.in-btns{display:flex;gap:.4rem;margin-top:.6rem}
+.in-acc{flex:1;padding:5px;border-radius:8px;border:none;background:linear-gradient(135deg,#7c3aff,#5b21b6);color:#fff;font-size:.7rem;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer;transition:all .2s}
+.in-acc:hover{box-shadow:0 4px 12px rgba(124,58,255,.4)}
+.in-den{padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted);font-family:'Tajawal',sans-serif;font-size:.7rem;cursor:pointer}
+.in-den:hover{color:var(--text)}
+.panel{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:10}
+.panel-tribe{padding:1rem;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(255,107,26,.06),rgba(255,150,0,.02))}
+.pt-row{display:flex;align-items:center;gap:.6rem}
+.pt-fl{font-size:1.5rem;animation:fd 1.2s ease-in-out infinite}
+.pt-name{font-size:.95rem;font-weight:900}
+.pt-sub{font-size:.62rem;color:var(--muted);margin-top:1px}
+.pt-stats{display:flex;gap:.5rem;margin-top:.8rem}
+.pts{flex:1;text-align:center;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:.4rem}
+.pts-v{font-size:.85rem;font-weight:800;color:var(--g2)}
+.pts-l{font-size:.55rem;color:var(--muted);margin-top:1px}
+.fuel-ring{display:flex;align-items:center;gap:.6rem;margin-top:.8rem;padding:.5rem .6rem;background:rgba(255,107,26,.06);border:1px solid rgba(255,107,26,.12);border-radius:10px;cursor:pointer;transition:all .2s}
+.fuel-ring:hover{background:rgba(255,107,26,.12);border-color:rgba(255,107,26,.25)}
+.fr-lbl{font-size:.7rem;flex:1}
+.fr-val{font-size:.65rem;font-family:'Space Mono',monospace;color:var(--g2)}
+.fr-bar{height:4px;background:rgba(255,255,255,.06);border-radius:100px;margin-top:3px;overflow:hidden}
+.fr-fill{height:100%;background:linear-gradient(90deg,var(--ember),var(--g2));border-radius:100px;transition:width 1s ease}
+.panel-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 1rem}
+.p-tab{flex:1;text-align:center;padding:.5rem 0;font-size:.7rem;color:var(--muted);cursor:pointer;transition:all .2s;border-bottom:2px solid transparent;position:relative}
+.p-tab:hover{color:var(--text)}
+.p-tab.on{color:var(--g2);border-bottom-color:var(--g2)}
+.p-tab .p-badge{position:absolute;top:2px;right:20%;width:14px;height:14px;border-radius:50%;background:var(--ember);font-size:.5rem;font-family:'Space Mono',monospace;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid var(--card)}
+.panel-body{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.panel-section{flex:1;display:flex;flex-direction:column;overflow:hidden;display:none}
+.panel-section.on{display:flex}
+.sec-ttl{font-size:.58rem;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:2px;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between;padding:0 1rem}
+.sec-ttl span{color:rgba(255,150,50,.6)}
+.mrow{display:flex;align-items:center;gap:.6rem;padding:.4rem .3rem;border-radius:10px;cursor:pointer;transition:all .2s;margin:0 .7rem}
+.mrow:hover{background:rgba(255,255,255,.03)}
+.mr-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;flex-shrink:0;position:relative;overflow:hidden;background:var(--bg2)}
+.mr-av img{width:100%;height:100%;object-fit:cover}
+.mr-d{position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:#2ed573;border:1.5px solid var(--card)}
+.mr-d.off{background:#333250}
+.mr-info{flex:1;min-width:0}
+.mr-n{font-size:.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mr-f{font-size:.6rem;color:var(--muted)}
+.mr-w{font-size:.7rem;background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.2);border-radius:6px;padding:2px 6px;color:var(--g2);font-family:'Space Mono',monospace}
+.mr-off{font-size:.6rem;color:var(--muted);background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:6px;padding:2px 6px}
+.add-friend-row{padding:.6rem 1rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;transition:all .2s;border-top:1px solid var(--border);margin-top:.3rem}
+.add-friend-row:hover{background:rgba(255,255,255,.03)}
+.add-friend-ico{width:30px;height:30px;border-radius:50%;background:rgba(124,58,255,.12);border:1px dashed rgba(124,58,255,.4);display:flex;align-items:center;justify-content:center;font-size:1rem;color:#a78bfa}
+.add-friend-txt{font-size:.78rem;font-weight:700;color:#a78bfa}
+.chal-ready{display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;background:rgba(124,58,255,.08);border:1px solid rgba(124,58,255,.2);border-radius:12px;margin:.5rem 1rem;cursor:pointer;transition:all .2s}
+.chal-ready:hover{background:rgba(124,58,255,.14)}
+.chal-ready.on{background:rgba(46,213,115,.1);border-color:rgba(46,213,115,.35)}
+.chal-ready.on .cr-dot{background:#2ed573;box-shadow:0 0 8px #2ed573}
+.cr-dot{width:10px;height:10px;border-radius:50%;background:var(--muted);transition:all .3s}
+.cr-txt{font-size:.78rem;font-weight:700}
+.cr-sub{font-size:.6rem;color:var(--muted)}
+.chal-list{flex:1;overflow-y:auto;padding:.5rem 1rem;display:flex;flex-direction:column;gap:.5rem}
+.chal-item{padding:.6rem .8rem;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s}
+.chal-item:hover{background:rgba(255,255,255,.06)}
+.chal-from{font-size:.78rem;font-weight:700}
+.chal-meta{font-size:.6rem;color:var(--muted);margin-top:2px}
+.chal-acts2{display:flex;gap:.4rem;margin-top:.5rem}
+.chal-acc2{flex:1;padding:5px;border-radius:8px;border:none;background:linear-gradient(135deg,#7c3aff,#5b21b6);color:#fff;font-size:.7rem;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer}
+.chal-den2{padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted);font-family:'Tajawal',sans-serif;font-size:.7rem;cursor:pointer}
+.trophy-list{flex:1;overflow-y:auto;padding:.5rem 1rem;display:flex;flex-direction:column;gap:.5rem}
+.trophy-item{display:flex;align-items:center;gap:.7rem;padding:.6rem .8rem;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px}
+.trophy-ico{font-size:1.4rem}
+.trophy-info{flex:1}
+.trophy-name{font-size:.8rem;font-weight:700}
+.trophy-desc{font-size:.6rem;color:var(--muted);margin-top:1px}
+.trophy-res{font-size:.65rem;font-family:'Space Mono',monospace;padding:2px 8px;border-radius:100px}
+.trophy-res.win{background:rgba(46,213,115,.12);color:#2ed573;border:1px solid rgba(46,213,115,.2)}
+.trophy-res.loss{background:rgba(255,50,50,.12);color:#ff6b6b;border:1px solid rgba(255,50,50,.2)}
+.chat-sec{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.chat-msgs{flex:1;overflow-y:auto;padding:.6rem .8rem;display:flex;flex-direction:column;gap:.4rem}
+.chat-msgs::-webkit-scrollbar{width:3px}
+.chat-msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:100px}
+.cm{display:flex;gap:6px;align-items:flex-start}
+.cm-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:800;flex-shrink:0;margin-top:2px;overflow:hidden;background:var(--bg2)}
+.cm-av img{width:100%;height:100%;object-fit:cover}
+.cm-body{max-width:82%}
+.cm-n{font-size:.55rem;color:var(--muted);margin-bottom:1px;font-family:'Space Mono',monospace}
+.cm-t{padding:5px 9px;border-radius:11px;font-size:.75rem;line-height:1.4;background:var(--card2);border:1px solid var(--border);word-break:break-word}
+.cm-t.fire{background:rgba(255,107,26,.1);border-color:rgba(255,107,26,.18)!important}
+.cm-t img,.cm-t video{max-width:100%;border-radius:8px;margin-top:4px;display:block}
+.cm-t video{max-height:220px;background:#000}
+.chat-inp-row{padding:.5rem .7rem;border-top:1px solid var(--border);display:flex;gap:5px;align-items:center}
+.chat-inp{flex:1;background:rgba(255,255,255,.03);border:1.5px solid var(--border);border-radius:100px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:.78rem;padding:.45rem .75rem;outline:none;transition:all .3s}
+.chat-inp:focus{border-color:rgba(255,107,26,.3);background:rgba(255,107,26,.05)}
+.chat-inp::placeholder{color:rgba(255,255,255,.1)}
+.chat-send{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--ember),var(--g2));border:none;color:#fff;font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(255,107,26,.4);transition:transform .2s;flex-shrink:0}
+.chat-send:hover{transform:scale(1.1)}
+.chat-attach{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.chat-attach:hover{color:var(--text);background:rgba(255,255,255,.1)}
+.chat-voice{width:30px;height:30px;border-radius:50%;background:rgba(46,213,115,.08);border:1px solid rgba(46,213,115,.2);color:var(--voice);font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.chat-voice:hover{background:rgba(46,213,115,.15);box-shadow:0 0 10px rgba(46,213,115,.2)}
+.chat-voice.on{background:rgba(46,213,115,.15);border-color:rgba(46,213,115,.4);color:#fff;box-shadow:0 0 12px rgba(46,213,115,.3)}
+#mediaInput{display:none}
+.set-overlay{position:fixed;inset:0;z-index:400;display:none;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+.set-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) translateY(-12px);z-index:500;background:rgba(8,7,20,.98);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:1.6rem 1.8rem;width:420px;backdrop-filter:blur(28px);box-shadow:0 24px 70px rgba(0,0,0,.7);display:none;opacity:0;transition:opacity .25s, transform .25s;pointer-events:none;max-height:90vh;overflow-y:auto}
+.set-modal.on{display:block;opacity:1;transform:translate(-50%,-50%) translateY(0);pointer-events:all}
+.set-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
+.set-title{font-size:1.1rem;font-weight:900}
+.set-x{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:all .2s}
+.set-x:hover{color:var(--text);background:rgba(255,255,255,.1)}
+.set-sec{margin-bottom:1.3rem}
+.set-lbl{font-size:.6rem;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:1.5px;margin-bottom:.5rem;display:flex;align-items:center;gap:5px}
+.set-lbl::before{content:'';width:3px;height:10px;background:linear-gradient(var(--g1),var(--g2));border-radius:100px}
+.prof-edit{display:flex;flex-direction:column;gap:.7rem}
+.pe-row{display:flex;align-items:center;gap:.7rem}
+.pe-av{width:50px;height:50px;border-radius:50%;overflow:hidden;border:2px solid rgba(124,58,255,.3);position:relative;cursor:pointer}
+.pe-av img{width:100%;height:100%;object-fit:cover}
+.pe-av::after{content:'📷';position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:1rem;opacity:0;transition:opacity .2s}
+.pe-av:hover::after{opacity:1}
+.pe-info{flex:1}
+.pe-name{font-size:.85rem;font-weight:700}
+.pe-mail{font-size:.6rem;color:var(--muted)}
+.pe-field{width:100%;background:rgba(255,255,255,.04);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:.82rem;padding:.5rem .7rem;outline:none;transition:all .3s;margin-top:.3rem}
+.pe-field:focus{border-color:rgba(124,58,255,.4);background:rgba(124,58,255,.06)}
+.pe-field::placeholder{color:rgba(255,255,255,.12)}
+.pe-area{min-height:70px;resize:none}
+.pe-save{width:100%;padding:10px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aff,#5b21b6);color:#fff;font-size:.85rem;font-weight:800;font-family:'Tajawal',sans-serif;cursor:pointer;box-shadow:0 0 18px rgba(124,58,255,.35);transition:all .25s;margin-top:.3rem}
+.pe-save:hover{transform:translateY(-2px);box-shadow:0 0 28px rgba(124,58,255,.55)}
+.music-row{display:flex;align-items:center;gap:.8rem;padding:.6rem .8rem;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px}
+.music-toggle{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--g1),var(--g2));border:none;color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(255,107,26,.35);transition:transform .2s}
+.music-toggle:hover{transform:scale(1.08)}
+.music-info{flex:1}
+.music-name{font-size:.82rem;font-weight:700}
+.music-artist{font-size:.6rem;color:var(--muted);margin-top:1px}
+.vol-wrap{display:flex;align-items:center;gap:.5rem;margin-top:.5rem}
+.vol-wrap span{font-size:.6rem;color:var(--muted)}
+.vol-slider{-webkit-appearance:none;appearance:none;height:4px;background:rgba(255,255,255,.1);border-radius:100px;flex:1;outline:none}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--g2);cursor:pointer;box-shadow:0 0 8px rgba(255,107,26,.4)}
+.tribe-switcher{position:relative;margin-bottom:.5rem}
+.tribe-menu{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);width:180px;background:rgba(8,7,20,.98);border:1px solid var(--border);border-radius:14px;padding:.5rem;backdrop-filter:blur(20px);box-shadow:0 16px 40px rgba(0,0,0,.6);display:none;opacity:0;transition:all .2s;z-index:100}
+.tribe-menu.on{display:block;opacity:1}
+.tribe-opt{padding:.45rem .6rem;border-radius:10px;font-size:.75rem;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.5rem}
+.tribe-opt:hover{background:rgba(255,255,255,.05)}
+.tribe-opt.on{background:rgba(255,107,26,.12);color:var(--g1)}
+.prof-overlay{position:fixed;inset:0;z-index:400;display:none;background:rgba(0,0,0,.55);backdrop-filter:blur(6px)}
+.prof-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) translateY(-15px);z-index:600;background:rgba(8,7,20,.98);border:1px solid rgba(255,255,255,.1);border-radius:22px;width:380px;max-height:85vh;backdrop-filter:blur(30px);box-shadow:0 28px 80px rgba(0,0,0,.7);display:none;opacity:0;transition:opacity .3s, transform .3s;pointer-events:none;overflow:hidden}
+.prof-modal.on{display:block;opacity:1;transform:translate(-50%,-50%) translateY(0);pointer-events:all}
+.prof-hdr{position:relative;height:110px;background:linear-gradient(135deg,rgba(124,58,255,.25),rgba(255,107,26,.15));display:flex;align-items:flex-end;justify-content:center;padding-bottom:0}
+.prof-hdr .prof-av-big{width:90px;height:90px;border-radius:50%;border:3px solid var(--bg);box-shadow:0 8px 30px rgba(0,0,0,.5);overflow:hidden;background:var(--bg2);position:absolute;bottom:-45px;left:50%;transform:translateX(-50%)}
+.prof-hdr .prof-av-big img{width:100%;height:100%;object-fit:cover}
+.prof-body{padding:3.2rem 1.4rem 1.2rem;text-align:center}
+.prof-name{font-size:1.15rem;font-weight:900}
+.prof-status{font-size:.65rem;color:var(--muted);margin-top:4px;display:flex;align-items:center;justify-content:center;gap:5px}
+.prof-status .dot{width:7px;height:7px;border-radius:50%;background:#2ed573;box-shadow:0 0 6px #2ed573}
+.prof-status .dot.off{background:#333250;box-shadow:none}
+.prof-bio{font-size:.78rem;color:var(--muted);margin-top:.7rem;line-height:1.5}
+.prof-stats2{display:flex;justify-content:center;gap:1.2rem;margin-top:1rem}
+.prof-st{text-align:center}
+.prof-st-v{font-size:.9rem;font-weight:800;color:var(--g2)}
+.prof-st-l{font-size:.55rem;color:var(--muted);margin-top:2px}
+.prof-btns{display:flex;gap:.6rem;margin-top:1.2rem}
+.prof-btn{flex:1;padding:10px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aff,#5b21b6);color:#fff;font-size:.85rem;font-weight:800;font-family:'Tajawal',sans-serif;cursor:pointer;box-shadow:0 0 18px rgba(124,58,255,.35);transition:all .25s}
+.prof-btn:hover{transform:translateY(-2px);box-shadow:0 0 28px rgba(124,58,255,.55)}
+.prof-btn.sec{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);box-shadow:none}
+.prof-btn.sec:hover{background:rgba(255,255,255,.1)}
+.pm-chat{display:none;flex-direction:column;height:200px;margin-top:1rem;border-top:1px solid var(--border);padding-top:.8rem}
+.pm-chat.on{display:flex}
+.pm-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.4rem;margin-bottom:.6rem}
+.pm-inp-row{display:flex;gap:5px}
+.pm-inp{flex:1;background:rgba(255,255,255,.03);border:1.5px solid var(--border);border-radius:100px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:.78rem;padding:.4rem .7rem;outline:none}
+.pm-inp:focus{border-color:rgba(124,58,255,.3)}
+.pm-send{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c3aff,#5b21b6);border:none;color:#fff;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.myprof-modal .prof-hdr{background:linear-gradient(135deg,rgba(255,107,26,.25),rgba(124,58,255,.15))}
+.game-overlay{position:fixed;inset:0;z-index:700;display:none;background:rgba(0,0,0,.85);backdrop-filter:blur(8px)}
+.game-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) translateY(-15px);z-index:800;background:rgba(8,7,20,.98);border:1px solid rgba(255,107,26,.3);border-radius:22px;width:90vw;height:90vh;backdrop-filter:blur(30px);box-shadow:0 28px 80px rgba(0,0,0,.7);display:none;opacity:0;transition:opacity .3s, transform .3s;pointer-events:none;overflow:hidden;display:flex;flex-direction:column}
+.game-modal.on{display:flex;opacity:1;transform:translate(-50%,-50%) translateY(0);pointer-events:all}
+.game-hdr{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--border)}
+.game-title{font-size:1rem;font-weight:900;display:flex;align-items:center;gap:8px}
+.game-x{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:all .2s}
+.game-x:hover{color:var(--text);background:rgba(255,255,255,.1)}
+.game-body{flex:1;overflow:hidden;position:relative}
+.game-body iframe{width:100%;height:100%;border:none}
+#toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(10,8,20,.96);border:1px solid rgba(255,107,26,.25);color:var(--g2);padding:8px 22px;border-radius:100px;font-size:.72rem;font-family:'Space Mono',monospace;z-index:9999;transition:all .3s;pointer-events:none;white-space:nowrap;opacity:0;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ===== Login Overlay ===== */
+.login-overlay{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.2rem}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:2.2rem 2rem;width:420px;max-width:90vw;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.7)}
+.login-box h2{font-size:1.3rem;font-weight:900;margin-bottom:.4rem;background:linear-gradient(135deg,var(--g1),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.login-box p{font-size:.75rem;color:var(--muted);margin-bottom:1.5rem}
+.login-inp{width:100%;background:rgba(255,255,255,.04);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:.9rem;padding:.7rem 1rem;outline:none;transition:all .3s;margin-bottom:.8rem;text-align:center}
+.login-inp:focus{border-color:rgba(255,107,26,.4);background:rgba(255,107,26,.06);box-shadow:0 0 16px rgba(255,107,26,.1)}
+.login-inp::placeholder{color:rgba(255,255,255,.12)}
+.login-btn{width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;font-size:.9rem;font-weight:800;font-family:'Tajawal',sans-serif;cursor:pointer;box-shadow:0 0 20px rgba(255,107,26,.35);transition:all .25s;margin-top:.5rem}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 0 32px rgba(255,107,26,.55)}
+.login-small{font-size:.65rem;color:var(--muted);margin-top:1rem}
+
+/* ===== Network & Voice ===== */
+.net-status{position:fixed;top:12px;right:12px;z-index:9998;display:flex;align-items:center;gap:6px;background:rgba(10,8,20,.9);border:1px solid var(--border);padding:4px 10px;border-radius:100px;font-size:.6rem;font-family:'Space Mono',monospace;transition:all .3s}
+.net-status.on{border-color:rgba(46,213,115,.3);color:#2ed573}
+.net-status.off{border-color:rgba(255,71,87,.3);color:#ff4757}
+.net-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:dotP 2s infinite}
+.conn-badge{font-size:.6rem;font-family:'Space Mono',monospace;padding:3px 10px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);transition:all .3s}
+.conn-badge.on{border-color:rgba(46,213,115,.3);color:#2ed573;background:rgba(46,213,115,.08)}
+.conn-badge.off{border-color:rgba(255,71,87,.2);color:#ff4757}
+
+/* Voice inside game modal */
+.game-voice-btn{height:32px;padding:0 14px;border-radius:100px;border:1px solid rgba(46,213,115,.25);background:rgba(46,213,115,.08);color:var(--voice);font-size:.72rem;font-family:'Tajawal',sans-serif;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.game-voice-btn:hover{background:rgba(46,213,115,.15);box-shadow:0 0 12px rgba(46,213,115,.2)}
+.game-voice-btn.on{background:rgba(46,213,115,.15);border-color:rgba(46,213,115,.4);color:#fff;box-shadow:0 0 14px rgba(46,213,115,.3)}
+
+/* Wood limit indicator */
+.day-box{border-radius:10px;padding:.4rem .2rem;font-size:.6rem;font-family:'Space Mono',monospace;border:1px solid var(--border);background:var(--card2);color:var(--muted);text-align:center;transition:all .3s}
+.day-box.claimed{background:linear-gradient(135deg,var(--g1),var(--g2));border-color:transparent;color:#fff;box-shadow:0 2px 10px rgba(255,107,26,.3)}
+.day-box.today{border-color:var(--gold);color:var(--gold);animation:pulse 2s infinite}
+.day-box.today.claimed{background:linear-gradient(135deg,#ffd700,#ff9500);color:#000}
+.day-box .day-ico{font-size:1rem;display:block;margin-bottom:.1rem}
+.day-box .day-num{font-size:.55rem;opacity:.7}
+
+/* ===== Connection Banner ===== */
+.fb-banner{position:fixed;bottom:0;left:0;right:0;z-index:9990;padding:6px 16px;font-size:.65rem;font-family:'Space Mono',monospace;text-align:center;transition:all .4s;pointer-events:none}
+.fb-banner.connecting{background:rgba(255,150,0,.15);color:#ffb84d;border-top:1px solid rgba(255,150,0,.25)}
+.fb-banner.live{background:rgba(46,213,115,.12);color:#2ed573;border-top:1px solid rgba(46,213,115,.2)}
+.fb-banner.error{background:rgba(255,71,87,.12);color:#ff4757;border-top:1px solid rgba(255,71,87,.2)}
+
+@media(max-width:768px){
+  :root{--card:#1e1e38;--card2:#252545;--border:rgba(255,255,255,.13);--muted:#9896b8;--text:#f8f6ff}
+  html{height:100%}
+  body{height:100%}
+
+  /* إلغاء الـ grid وتحويله لـ flex عمودي */
+  .app{
+    display:flex!important;
+    flex-direction:column!important;
+    height:100svh!important;
+    width:100vw!important;
+    grid-template-columns:none!important;
+    grid-template-rows:none!important;
+    overflow:hidden!important;
+  }
+
+  /* ترتيب العناصر */
+  .sidebar{order:99!important} /* سيظهر آخر = أسفل */
+  .main{order:1!important}
+  .panel{order:2!important}
+
+  /* sidebar → شريط سفلي */
+  .sidebar{
+    flex-direction:row!important;
+    height:52px!important;
+    width:100%!important;
+    min-height:52px!important;
+    max-height:52px!important;
+    border-left:none!important;
+    border-top:1px solid var(--border)!important;
+    padding:0 .4rem!important;
+    gap:.1rem!important;
+    justify-content:space-around!important;
+    align-items:center!important;
+    background:var(--card2)!important;
+    overflow-x:auto!important;
+    flex-shrink:0!important;
+  }
+  .sidebar::-webkit-scrollbar{display:none}
+  .tribe-switcher{display:flex!important;align-items:center}
+  .sb-logo{width:32px!important;height:32px!important;font-size:.9rem!important;margin-bottom:0!important}
+  .sb-btn{width:36px!important;height:36px!important;font-size:.95rem!important;flex-shrink:0!important}
+  .sb-bottom{flex-direction:row!important;margin-top:0!important;gap:.1rem!important}
+  .sb-av{width:32px!important;height:32px!important}
+  .sb-av img{width:30px!important;height:30px!important}
+  .tribe-menu,.sb-badge{display:none!important}
+  .net-status{display:none!important}
+
+  /* main → النار فقط */
+  .main{
+    flex-shrink:0!important;
+    height:148px!important;
+    min-height:148px!important;
+    max-height:148px!important;
+    position:relative!important;
+    overflow:hidden!important;
+    background:var(--bg)!important;
+    display:block!important;
+  }
+  .scene{width:100%!important;height:148px!important;position:relative!important;overflow:hidden!important}
+  .fire-zone{bottom:15%!important;left:50%!important;transform:translateX(-50%) scale(.6)!important;transform-origin:bottom center!important}
+  .fuel-sys{position:absolute!important;bottom:4px!important;left:50%!important;transform:translateX(-50%)!important;width:88%!important;background:rgba(0,0,0,.55)!important;border-radius:20px!important;padding:3px 10px!important;display:flex!important;align-items:center!important;gap:6px!important;z-index:8!important}
+  .fuel-lbl{font-size:.52rem!important;color:var(--muted)!important;flex-shrink:0!important}
+  .fuel-wrap{flex:1!important;height:3px!important;border-radius:4px!important;background:rgba(255,255,255,.1)!important}
+  .wood-scene-btn,.wood-limit-hint,.daily-hero,.member,.wisp-l,.wisp-r,#onlinePlayersRing{display:none!important}
+  .ground{height:14px!important}
+  .incoming{position:fixed!important;top:56px!important;right:8px!important;bottom:auto!important;max-width:158px!important;z-index:300!important;font-size:.64rem!important}
+
+  /* topbar داخل main */
+  .topbar{height:44px!important;padding:0 .7rem!important;background:var(--card2)!important;border-bottom:1px solid var(--border)!important}
+  .tribe-name{font-size:.8rem!important;font-weight:800!important}
+  .tribe-level{display:none!important}
+  .conn-badge{font-size:.56rem!important;padding:2px 7px!important}
+  .tb-btn{height:25px!important;padding:0 9px!important;font-size:.64rem!important;border-radius:20px!important}
+  #notifBtn{width:25px!important;height:25px!important;padding:0!important;font-size:.78rem!important}
+
+  /* panel → الدردشة تأخذ كل المتبقي */
+  .panel{
+    flex:1!important;
+    min-height:0!important;
+    max-height:none!important;
+    height:auto!important;
+    display:flex!important;
+    flex-direction:column!important;
+    border-right:none!important;
+    border-top:1px solid var(--border)!important;
+    background:var(--card)!important;
+    overflow:hidden!important;
+    position:relative!important;
+  }
+
+  /* رأس القبيلة مضغوط */
+  .panel-tribe{flex-shrink:0!important;padding:.38rem .65rem!important;border-bottom:1px solid var(--border)!important}
+  .pt-row{display:flex!important;align-items:center!important;gap:.35rem!important}
+  .pt-fl{font-size:.95rem!important}
+  .pt-name{font-size:.76rem!important;font-weight:800!important}
+  .pt-sub{font-size:.54rem!important;color:var(--muted)!important}
+  .pt-stats{display:flex!important;gap:.22rem!important;margin-top:.28rem!important;overflow-x:auto!important;flex-wrap:nowrap!important}
+  .pt-stats::-webkit-scrollbar{display:none}
+  .pts{flex-shrink:0!important;min-width:40px!important;padding:.24rem .26rem!important;border-radius:6px!important;text-align:center!important;background:rgba(255,255,255,.04)!important;border:1px solid var(--border)!important}
+  .pts-v{font-size:.72rem!important;font-weight:900!important}
+  .pts-l{font-size:.44rem!important;color:var(--muted)!important}
+  .fuel-ring{margin-top:.28rem!important;padding:.26rem .45rem!important;border-radius:8px!important;display:flex!important;align-items:center!important;gap:.45rem!important}
+  .fr-lbl{font-size:.56rem!important}
+  .fr-val{font-size:.61rem!important}
+
+  /* تبويبات */
+  .panel-tabs{flex-shrink:0!important;display:flex!important;background:var(--card2)!important;border-bottom:1px solid var(--border)!important}
+  .p-tab{flex:1!important;text-align:center!important;padding:.38rem .04rem!important;font-size:.58rem!important;cursor:pointer!important;border-bottom:2px solid transparent!important}
+  .p-tab.on{color:var(--g2)!important;border-bottom-color:var(--g2)!important}
+
+  /* sections */
+  .panel-body{flex:1!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;position:relative!important}
+  .panel-section{display:none!important;flex-direction:column!important;flex:1!important;min-height:0!important;overflow:hidden!important}
+  .panel-section.on{display:flex!important}
+  .chat-sec{flex:1!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+
+  /* رسائل الدردشة */
+  .chat-msgs{flex:1!important;min-height:0!important;overflow-y:auto!important;padding:.38rem .55rem!important;display:flex!important;flex-direction:column!important;gap:.22rem!important;-webkit-overflow-scrolling:touch!important}
+  .cm{display:flex!important;align-items:flex-start!important;gap:.3rem!important}
+  .cm-av{flex-shrink:0!important}
+  .cm-av img{width:24px!important;height:24px!important;border-radius:50%!important}
+  .cm-n{font-size:.59rem!important;color:var(--muted)!important;margin-bottom:1px!important}
+  .cm-t{font-size:.73rem!important;padding:.26rem .46rem!important;border-radius:10px!important;line-height:1.45!important;background:rgba(255,255,255,.05)!important;display:inline-block!important}
+  .cm-body{flex:1!important;min-width:0!important}
+
+  /* خانة الكتابة — ملتصقة بالأسفل دائماً */
+  .chat-inp-row{
+    flex-shrink:0!important;
+    display:flex!important;align-items:center!important;gap:4px!important;
+    padding:.3rem .4rem!important;
+    background:var(--card2)!important;
+    border-top:1px solid var(--border)!important;
+    position:relative!important;z-index:10!important;
+  }
+  .chat-inp{flex:1!important;background:rgba(255,255,255,.06)!important;border:1px solid var(--border)!important;border-radius:20px!important;color:var(--text)!important;font-family:'Tajawal',sans-serif!important;font-size:.8rem!important;padding:.3rem .52rem!important;outline:none!important}
+  .chat-inp:focus{border-color:rgba(255,107,26,.4)!important}
+  .chat-send{width:30px!important;height:30px!important;border-radius:50%!important;border:none!important;background:linear-gradient(135deg,var(--g1),var(--g2))!important;color:#fff!important;font-size:.82rem!important;cursor:pointer!important;flex-shrink:0!important}
+  .chat-attach,.chat-voice{width:30px!important;height:30px!important;flex-shrink:0!important;border-radius:50%!important;background:rgba(255,255,255,.05)!important;border:1px solid var(--border)!important;font-size:.8rem!important;cursor:pointer!important}
+
+  /* مودالات */
+  .set-modal,.chal-modal,.prof-modal{width:95vw!important;max-height:88svh!important;overflow-y:auto!important;position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important}
+  .set-modal{padding:1rem .85rem!important}
+  .game-modal{position:fixed!important;inset:0!important;width:100vw!important;height:100svh!important;border-radius:0!important;transform:none!important}
+  .login-box{padding:1.2rem .9rem!important;width:90vw!important;max-height:88svh!important;overflow-y:auto!important}
+  .wood-quick-bar{display:none!important}
+}
+
+@media(max-width:380px){
+  .sb-btn{width:32px!important;height:32px!important;font-size:.88rem!important}
+  .p-tab{font-size:.54rem!important}
+  .pts{min-width:36px!important}
+}
+</style>
+
+<div class="net-status off" id="netStatus">
+  <div class="net-dot"></div>
+  <span id="netText">غير متصل</span>
+</div>
+
+<!-- Login Overlay -->
+<div class="login-overlay" id="loginOverlay">
+
+  <!-- خطوة 1: تسجيل الدخول -->
+  <div class="login-box" id="authBox">
+    <div style="font-size:2.2rem;margin-bottom:.2rem">🔥</div>
+    <h2 style="margin-bottom:.2rem">عوالم</h2>
+    <p id="authSubtitle" style="font-size:.75rem;color:var(--muted);margin-bottom:1.2rem">ادخل إلى عالمك أو أنشئ حساباً جديداً</p>
+    <div style="display:flex;gap:.5rem;margin-bottom:1.2rem;background:var(--card2);border-radius:12px;padding:4px">
+      <button id="tabLogin" onclick="switchAuthTab('login')" style="flex:1;padding:.45rem;border:none;border-radius:9px;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;font-family:Tajawal,sans-serif;font-weight:700;font-size:.82rem;cursor:pointer">دخول</button>
+      <button id="tabRegister" onclick="switchAuthTab('register')" style="flex:1;padding:.45rem;border:none;border-radius:9px;background:transparent;color:var(--muted);font-family:Tajawal,sans-serif;font-weight:700;font-size:.82rem;cursor:pointer">حساب جديد</button>
+    </div>
+    <div id="nameField" style="display:none"><input class="login-inp" id="loginName" placeholder="اسمك في اللعبة"></div>
+    <input class="login-inp" id="loginEmail" placeholder="البريد الإلكتروني" type="email">
+    <div style="position:relative">
+      <input class="login-inp" id="loginPass" placeholder="كلمة المرور" type="password" style="padding-left:2.5rem">
+      <span onclick="togglePassVis()" style="position:absolute;left:.7rem;top:50%;transform:translateY(-50%);cursor:pointer;font-size:.9rem;opacity:.5">👁</span>
+    </div>
+    <div id="confirmField" style="display:none"><input class="login-inp" id="loginPassConfirm" placeholder="تأكيد كلمة المرور" type="password"></div>
+    <div id="authError" style="display:none;background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.3);border-radius:10px;padding:.6rem .9rem;font-size:.72rem;color:#ff4757;margin-bottom:.8rem;text-align:right"></div>
+    <button class="login-btn" id="authBtn" onclick="doAuth()">🚀 دخول</button>
+    <div id="forgotWrap" style="margin-top:.6rem"><span onclick="doForgotPassword()" style="font-size:.7rem;color:var(--muted);cursor:pointer;text-decoration:underline;opacity:.7">نسيت كلمة المرور؟</span></div>
+    <div style="display:flex;align-items:center;gap:.5rem;margin:.8rem 0">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:.65rem;color:var(--muted)">أو</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    <button onclick="doGoogleLogin()" style="width:100%;padding:.6rem;border:1.5px solid var(--border);border-radius:12px;background:rgba(255,255,255,.04);color:var(--text);font-family:Tajawal,sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      دخول بـ Google
+    </button>
+    <div class="login-small" id="authHint">حسابك محفوظ — يمكنك الدخول من أي جهاز</div>
+  </div>
+
+  <!-- خطوة 2: اختيار القبيلة -->
+  <div class="login-box" id="tribeBox" style="display:none">
+    <div style="font-size:2rem;margin-bottom:.3rem">⚔️</div>
+    <h2 id="tribeWelcome" style="margin-bottom:.3rem">مرحباً!</h2>
+    <p style="font-size:.75rem;color:var(--muted);margin-bottom:1.5rem">اختر قبيلتك لتبدأ المغامرة</p>
+    <button onclick="showCreateTribe()" style="width:100%;padding:.85rem;border:1.5px solid rgba(255,107,26,.3);border-radius:14px;background:rgba(255,107,26,.08);color:var(--text);font-family:Tajawal,sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;margin-bottom:.7rem;display:flex;align-items:center;gap:.7rem">
+      <span style="font-size:1.4rem">🏕️</span>
+      <div style="text-align:right"><div>أنشئ قبيلة جديدة</div><div style="font-size:.65rem;color:var(--muted);font-weight:400">كن القائد وادعُ أصدقاءك</div></div>
+    </button>
+    <button onclick="showJoinTribe()" style="width:100%;padding:.85rem;border:1.5px solid rgba(100,100,255,.2);border-radius:14px;background:rgba(100,100,255,.06);color:var(--text);font-family:Tajawal,sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;display:flex;align-items:center;gap:.7rem">
+      <span style="font-size:1.4rem">🔍</span>
+      <div style="text-align:right"><div>انضم لقبيلة موجودة</div><div style="font-size:.65rem;color:var(--muted);font-weight:400">ادخل كود الدعوة أو ابحث</div></div>
+    </button>
+  </div>
+
+  <!-- إنشاء قبيلة -->
+  <div class="login-box" id="createTribeBox" style="display:none">
+    <button onclick="showTribeChoice()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;margin-bottom:.8rem;text-align:right;width:100%">← رجوع</button>
+    <div style="font-size:1.8rem;margin-bottom:.3rem">🏕️</div>
+    <h2 style="margin-bottom:1rem">أنشئ قبيلتك</h2>
+    <input class="login-inp" id="tribeName" placeholder="اسم القبيلة (مثال: فرسان الضوء)">
+    <p style="font-size:.7rem;color:var(--muted);margin-bottom:.5rem;text-align:right">اختر شعار القبيلة:</p>
+    <div id="tribeEmojiPicker" style="display:grid;grid-template-columns:repeat(6,1fr);gap:.4rem;margin-bottom:.8rem"></div>
+    <div id="selectedEmoji" style="font-size:2rem;margin:.3rem 0;text-align:center">🔥</div>
+    <div id="createTribeError" style="display:none;background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.3);border-radius:10px;padding:.5rem .8rem;font-size:.72rem;color:#ff4757;margin-bottom:.8rem"></div>
+    <button class="login-btn" id="createTribeBtn" onclick="doCreateTribe()">🏕️ إنشاء القبيلة</button>
+  </div>
+
+  <!-- الانضمام لقبيلة -->
+  <div class="login-box" id="joinTribeBox" style="display:none">
+    <button onclick="showTribeChoice()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;margin-bottom:.8rem;text-align:right;width:100%">← رجوع</button>
+    <div style="font-size:1.8rem;margin-bottom:.3rem">🔍</div>
+    <h2 style="margin-bottom:1rem">انضم لقبيلة</h2>
+    <input class="login-inp" id="tribeSearch" placeholder="ابحث باسم القبيلة..." oninput="searchTribes(this.value)">
+    <div id="tribeSearchResults" style="max-height:180px;overflow-y:auto;margin-bottom:.8rem;display:flex;flex-direction:column;gap:.4rem"></div>
+    <div style="display:flex;align-items:center;gap:.5rem;margin:.3rem 0 .7rem">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:.62rem;color:var(--muted)">أو ادخل كود الدعوة</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    <input class="login-inp" id="inviteCode" placeholder="كود الدعوة (مثال: ABC123)" style="text-transform:uppercase;letter-spacing:.1em">
+    <div id="joinTribeError" style="display:none;background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.3);border-radius:10px;padding:.5rem .8rem;font-size:.72rem;color:#ff4757;margin-bottom:.8rem"></div>
+    <button class="login-btn" id="joinTribeBtn" onclick="doJoinTribe()">🔍 انضمام</button>
+  </div>
+
+</div>
+
+<!-- مودال المكافآت اليومية -->
+<div id="dailyRewardOverlay" onclick="if(event.target===this)closeDailyReward()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px)">
+  <div style="background:var(--card);border:1px solid rgba(255,107,26,.25);border-radius:24px;padding:2rem 1.8rem;width:360px;max-width:92vw;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.7)">
+    <div style="font-size:2.5rem;margin-bottom:.3rem">🎁</div>
+    <h2 style="font-size:1.2rem;font-weight:900;background:linear-gradient(135deg,var(--g1),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.3rem">مكافأة يومية!</h2>
+    <p style="font-size:.75rem;color:var(--muted);margin-bottom:1.2rem" id="dailyStreakText">سلسلة ١ يوم متتالي 🔥</p>
+
+    <!-- أيام الأسبوع -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem;margin-bottom:1.2rem" id="dailyDaysGrid"></div>
+
+    <!-- المكافأة اليوم -->
+    <div style="background:var(--card2);border-radius:16px;padding:1rem;margin-bottom:1.2rem;border:1px solid rgba(255,107,26,.2)">
+      <div style="font-size:1.8rem" id="dailyRewardIcon">🔥</div>
+      <div style="font-size:1rem;font-weight:900;color:var(--g2);margin:.3rem 0" id="dailyRewardAmount">+10 وقود</div>
+      <div style="font-size:.68rem;color:var(--muted)" id="dailyRewardDesc">مكافأة اليوم الأول</div>
+    </div>
+
+    <button onclick="claimDailyReward()" id="claimBtn" style="width:100%;padding:.7rem;border:none;border-radius:14px;background:linear-gradient(135deg,var(--g1),var(--gold));color:#fff;font-family:Tajawal,sans-serif;font-weight:900;font-size:.95rem;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,26,.4)">
+      🎁 استلم المكافأة
+    </button>
+    <div style="margin-top:.7rem;font-size:.65rem;color:var(--muted)" id="dailyNextText"></div>
+  </div>
+</div>
+<aside class="sidebar">
+  <div class="tribe-switcher">
+    <div class="sb-logo" id="tribeLogoBtn" onclick="toggleTribeMenu()" title="تبديل القبيلة">🔥</div>
+    <div class="tribe-menu" id="tribeMenu"></div>
+  </div>
+  <div class="sb-btn on" data-panel="chat" onclick="switchPanel('chat', this)">🌍</div>
+  <div class="sb-btn" data-panel="challenge" onclick="switchPanel('challenge', this)" style="position:relative">⚔️<div class="sb-badge">2</div></div>
+  <div class="sb-btn" data-panel="members" onclick="switchPanel('members', this)">👥</div>
+  <div class="sb-btn" data-panel="trophy" onclick="switchPanel('trophy', this)">🏆</div>
+  <div class="sb-bottom">
+    <div class="sb-btn" onclick="DailyReward._showModal ? DailyReward._showModal() : null" title="المكافأة اليومية" style="font-size:.85rem">🎁</div>
+    <div class="sb-btn" onclick="openSettings()">⚙️</div>
+    <div class="sb-av" onclick="openMyProfile()"><img id="myAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=سامي" alt="أنا"></div>
+  </div>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-right">
+      <div class="tribe-name" id="tribeNameTop"><span id="tribeIconTop">🔥</span>فرسان الضوء</div>
+      <div class="tribe-level" id="tribeLvlTop">المستوى ١٢</div>
+      <span class="conn-badge off" id="connBadge">غير متصل</span>
+    </div>
+    <div class="topbar-left">
+      <button class="tb-btn challenge" id="chalBtn" onclick="toggleChal()">⚔️ تحدٍّ</button>
+      <button class="tb-btn" id="notifBtn" onclick="toggleNotifications()" title="تفعيل الإشعارات" style="padding:0 10px">🔔</button>
+    </div>
+  </div>
+  <div class="chal-overlay" id="chalOverlay" onclick="closeChal()"></div>
+  <div class="chal-modal" id="chalModal">
+    <div class="chal-hdr">
+      <div class="chal-title">⚔️ إرسال تحدٍّ</div>
+      <div class="chal-x" onclick="closeChal()">✕</div>
+    </div>
+    <div class="chal-sub">اختر القبيلة التي تريد تحديها وابدأ المعركة</div>
+    <div class="chal-lbl">اسم القبيلة أو الفريق</div>
+    <input class="chal-inp" id="chalTarget" placeholder="مثال: أبطال الشرق ، نجوم الغرب..." />
+    <div class="chal-lbl">اختر اللعبة</div>
+    <div class="chal-games" id="gamesWrap">
+      <div class="chal-game on" onclick="pickGame(this)">🔮 حاملو الضوء</div>
+      <div class="chal-game" onclick="pickGame(this)">🎯 الهدف المتحرك</div>
+      <div class="chal-game" onclick="pickGame(this)">🌊 عاصفة الكلمات</div>
+      <div class="chal-game" onclick="pickGame(this)">⚡ البرق السريع</div>
+      <div class="chal-game" onclick="pickGame(this)">🌍 صراع القارات</div>
+    </div>
+    <label class="chal-check"><input type="checkbox" id="groupOnly"> 🔒 لعب داخل القروب فقط</label>
+    <div class="chal-acts">
+      <button class="chal-cancel" onclick="closeChal()">إلغاء</button>
+      <button class="chal-send" onclick="sendChal()">🚀 إرسال التحدي</button>
+    </div>
+  </div>
+  <div class="set-overlay" id="setOverlay" onclick="closeSettings()"></div>
+  <div class="set-modal" id="setModal">
+    <div class="set-hdr">
+      <div class="set-title">⚙️ الإعدادات</div>
+      <div class="set-x" onclick="closeSettings()">✕</div>
+    </div>
+    <div class="set-sec">
+      <div class="set-lbl">الملف الشخصي</div>
+      <div class="prof-edit">
+        <div class="pe-row">
+          <div class="pe-av" onclick="document.getElementById('avatarInput').click()">
+            <img id="setAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=سامي" alt="أنا">
+          </div>
+          <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="updateAvatar(this)">
+          <div class="pe-info">
+            <div class="pe-name" id="setDispName">سامي 🔥</div>
+            <div class="pe-mail" id="setDispEmail">قائد القبيلة</div>
+          </div>
+        </div>
+        <input class="pe-field" id="editName" placeholder="الاسم" value="سامي">
+        <textarea class="pe-field pe-area" id="editBio" placeholder="السيرة الذاتية...">لاعب شغوف في عوالم. أحب التحديات وأبني قبيلتي منذ عام ٢٠٢٤. دائماً جاهز للمعركة!</textarea>
+        <button class="pe-save" onclick="saveProfile()">💾 حفظ التغييرات</button>
+      </div>
+    </div>
+    <div class="set-sec">
+      <div class="set-lbl">الموسيقى الكلاسيكية الهادئة</div>
+      <div class="music-row">
+        <button class="music-toggle" id="musicToggle" onclick="toggleMusic()">▶️</button>
+        <div class="music-info">
+          <div class="music-name">بيانو هادئ للاسترخاء</div>
+          <div class="music-artist">موسيقى كلاسيكية هادئة</div>
+          <div class="vol-wrap">
+            <span>🔈</span>
+            <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.01" value="0.3" oninput="setVolume(this.value)">
+            <span>🔊</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="prof-overlay" id="profOverlay" onclick="closeMemberProfile()"></div>
+  <div class="prof-modal" id="profModal">
+    <div class="prof-hdr">
+      <div class="prof-av-big" id="profAv"><img src="" alt=""></div>
+    </div>
+    <div class="prof-body">
+      <div class="prof-name" id="profName">---</div>
+      <div class="prof-status" id="profStatus"><div class="dot"></div><span id="profStatusText">متصل</span></div>
+      <div class="prof-bio" id="profBio">---</div>
+      <div class="prof-stats2">
+        <div class="prof-st"><div class="prof-st-v" id="profWood">٠</div><div class="prof-st-l">وقود</div></div>
+        <div class="prof-st"><div class="prof-st-v" id="profWins">٠</div><div class="prof-st-l">انتصارات</div></div>
+        <div class="prof-st"><div class="prof-st-v" id="profLevel">٠</div><div class="prof-st-l">مستوى</div></div>
+      </div>
+      <div class="prof-btns">
+        <button class="prof-btn" onclick="startPrivateChat()">💬 دردشة خاصة</button>
+        <button class="prof-btn sec" onclick="closeMemberProfile()">إغلاق</button>
+      </div>
+      <div class="pm-chat" id="pmChat">
+        <div class="pm-msgs" id="pmMsgs"></div>
+        <div class="pm-inp-row">
+          <input class="pm-inp" id="pmInp" placeholder="رسالة خاصة..." onkeydown="if(event.key==='Enter')sendPM()">
+          <button class="pm-send" onclick="sendPM()">➤</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="prof-overlay" id="myProfOverlay" onclick="closeMyProfile()"></div>
+  <div class="prof-modal myprof-modal" id="myProfModal">
+    <div class="prof-hdr">
+      <div class="prof-av-big"><img id="myProfAv" src="https://api.dicebear.com/7.x/avataaars/svg?seed=سامي" alt="أنا"></div>
+    </div>
+    <div class="prof-body">
+      <div class="prof-name" id="myProfName">سامي 🔥</div>
+      <div class="prof-status"><div class="dot"></div><span>متصل الآن</span></div>
+      <div class="prof-bio" id="myProfBio">لاعب شغوف في عوالم. أحب التحديات وأبني قبيلتي منذ عام ٢٠٢٤. دائماً جاهز للمعركة!</div>
+      <div class="prof-stats2">
+        <div class="prof-st"><div class="prof-st-v" id="myProfLvl">١٢</div><div class="prof-st-l">مستوى</div></div>
+        <div class="prof-st"><div class="prof-st-v" id="myProfWins">٤٧</div><div class="prof-st-l">انتصار</div></div>
+        <div class="prof-st"><div class="prof-st-v" id="myProfWood">٨</div><div class="prof-st-l">وقود</div></div>
+      </div>
+      <div class="prof-btns">
+        <button class="prof-btn sec" onclick="closeMyProfile()">إغلاق</button>
+      </div>
+    </div>
+  </div>
+  <div class="game-overlay" id="gameOverlay" onclick="closeGame()"></div>
+  <div class="game-modal" id="gameModal">
+    <div class="game-hdr">
+      <div class="game-title">🌍 صراع القارات</div>
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <button class="game-voice-btn" id="gameVoiceBtn" onclick="toggleGameVoice()">🎤 <span id="gameVoiceText">تفعيل الصوت</span></button>
+        <div class="game-x" onclick="closeGame()">✕</div>
+      </div>
+    </div>
+    <div class="game-body">
+      <iframe id="gameFrame" src=""></iframe>
+    </div>
+  </div>
+  <div class="scene" id="scene">
+    <div class="stars"></div>
+    <div class="scene-glow" id="sceneGlow"></div>
+    <div class="fire-zone" id="fireZone">
+      <div class="flames">
+        <div class="flame fl-o" id="flO"></div>
+        <div class="flame fl-m" id="flM"></div>
+        <div class="flame fl-i" id="flI"></div>
+        <div class="flame fl-c" id="flC"></div>
+      </div>
+      <div class="wisp wisp-l"></div>
+      <div class="wisp wisp-r"></div>
+      <div class="coal-glow"></div>
+      <div class="logs"></div>
+      <div class="fire-ground-glow" id="gglow"></div>
+    </div>
+    <div class="fuel-sys">
+      <div class="fuel-lbl" id="fuelLbl">طاقة النار · ٦٨٪</div>
+      <div class="fuel-wrap"><div class="fuel-fill" id="fuelFill" style="width:68%"></div></div>
+    </div>
+    <button class="wood-scene-btn" id="woodSceneBtn" onclick="addWood()"><span class="wb-ico">🪵</span> أضف وقوداً للنار</button>
+    <div class="wood-limit-hint" id="woodHint">متبقي ٣/٣ استخدامات هذه الساعة</div>
+    <div id="membersWrap"></div>
+    <!-- أفاتارات اللاعبين المتصلين حول النار -->
+    <div id="onlinePlayersRing" style="position:absolute;inset:0;pointer-events:none;z-index:5"></div>
+    <div class="ground"></div>
+    <div class="incoming" id="incoming">
+      <div class="in-lbl">تحدٍّ وارد ⚔️</div>
+      <div class="in-name">أبطال الشرق</div>
+      <div class="in-sub">حاملو الضوء · ٤ vs ٤</div>
+      <div class="in-btns">
+        <button class="in-acc" onclick="acceptIn()">✅ قبول</button>
+        <button class="in-den" onclick="denyIn()">✕</button>
+      </div>
+    </div>
+    <!-- بطل اليوم — حقيقي من لوحة المتصدرين -->
+    <div class="daily-hero" id="dailyHeroBox" style="display:none">
+      <div class="dh-lbl">بطل اليوم 🏅</div>
+      <div class="dh-row">
+        <div class="dh-av"><img id="dailyHeroAv" src="" alt=""></div>
+        <div><div class="dh-name" id="dailyHeroName">—</div><div class="dh-sub" id="dailyHeroSub">—</div></div>
+      </div>
+    </div>
+  </div>
+</main>
+<aside class="panel">
+  <div class="panel-tribe">
+    <div class="pt-row">
+      <div class="pt-fl" id="panelFlame">🔥</div>
+      <div><div class="pt-name" id="panelName">فرسان الضوء</div><div class="pt-sub" id="panelSub">المركز الثالث عالمياً</div></div>
+    </div>
+    <div class="pt-stats">
+      <div class="pts"><div class="pts-v" id="panelLvl">١٢</div><div class="pts-l">المستوى</div></div>
+      <div class="pts"><div class="pts-v" id="panelWins">٤٧</div><div class="pts-l">انتصار</div></div>
+      <div class="pts"><div class="pts-v" id="panelCount">٦</div><div class="pts-l">أعضاء</div></div>
+      <div class="pts"><div class="pts-v" id="panelFuelV" style="color:var(--gold)">🔥٦٨</div><div class="pts-l">طاقة</div></div>
+    </div>
+    <div class="fuel-ring" onclick="addWood()">
+      <span style="font-size:.9rem">🪵</span>
+      <div style="flex:1">
+        <div class="fr-lbl">نار القبيلة</div>
+        <div class="fr-bar"><div class="fr-fill" id="panelFuel" style="width:68%"></div></div>
+      </div>
+      <div class="fr-val" id="fuelPct">٦٨٪</div>
+    </div>
+  </div>
+  <div class="panel-tabs">
+    <div class="p-tab on" data-panel="chat" onclick="switchPanel('chat', this)">💬 دردشة</div>
+    <div class="p-tab" data-panel="members" onclick="switchPanel('members', this)">👥 الأعضاء</div>
+    <div class="p-tab" data-panel="challenge" onclick="switchPanel('challenge', this)">⚔️ تحديات <div class="p-badge">2</div></div>
+    <div class="p-tab" data-panel="trophy" onclick="switchPanel('trophy', this)">🏆 نتائج</div>
+  </div>
+  <div class="panel-body">
+    <div class="panel-section on" id="panel-chat">
+      <div class="chat-sec">
+        <!-- شريط وقود سريع للموبايل -->
+        <div class="wood-quick-bar" style="display:none">
+          <span class="wqb-txt">🔥 أضف وقوداً للنار</span>
+          <button class="wqb-btn" onclick="addWood()">🪵 +وقود</button>
+        </div>
+        <div class="chat-msgs" id="chatMsgs">
+          <div style="text-align:center;padding:2rem 1rem;color:var(--muted);font-size:.75rem">
+            <div style="font-size:1.5rem;margin-bottom:.5rem">🔥</div>
+            لا توجد رسائل بعد — ابدأ المحادثة!
+          </div>
+        </div>
+        <div class="chat-inp-row">
+          <input class="chat-inp" id="chatI" placeholder="اكتب للقبيلة..." onkeydown="if(event.key==='Enter')sendMsg()">
+          <button class="chat-attach" onclick="document.getElementById('mediaInput').click()">📎</button>
+          <input type="file" id="mediaInput" accept="image/*,video/*" onchange="handleMedia(this)">
+          <button class="chat-voice" id="chatVoiceBtn" onclick="toggleChatVoice()" title="تفعيل الصوت في الدردشة">🎤</button>
+          <button class="chat-send" onclick="sendMsg()">➤</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel-section" id="panel-members">
+      <div class="sec-ttl">MEMBERS <span id="onlineC">—</span></div>
+      <div style="flex:1;overflow-y:auto;padding:.3rem 0" id="membersList">
+        <div style="text-align:center;padding:2rem;color:var(--muted);font-size:.75rem">
+          <div style="font-size:1.5rem;margin-bottom:.5rem">👥</div>
+          جاري تحميل الأعضاء...
+        </div>
+      </div>
+      <div class="add-friend-row" onclick="copyInviteCode()">
+        <div class="add-friend-ico">🔗</div>
+        <div class="add-friend-txt">انسخ كود الدعوة لدعوة الأصدقاء</div>
+      </div>
+    </div>
+    <div class="panel-section" id="panel-challenge">
+      <div class="chal-ready" id="chalReady" onclick="toggleChallengeReady()">
+        <div class="cr-dot" id="crDot"></div>
+        <div style="flex:1">
+          <div class="cr-txt">مستعد للتحدي</div>
+          <div class="cr-sub">اضغط لتفعيل وضع الاستعداد</div>
+        </div>
+      </div>
+      <div class="sec-ttl" style="padding-top:.5rem">التحديات الواردة</div>
+      <div class="chal-list" id="realChalList">
+        <div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:.75rem">
+          <div style="font-size:1.3rem;margin-bottom:.4rem">⚔️</div>
+          لا توجد تحديات واردة حالياً
+        </div>
+      </div>
+    </div>
+    <div class="panel-section" id="panel-trophy">
+      <div class="sec-ttl">🏆 المتصدرون في الغرفة</div>
+      <div id="leaderboardList" style="display:flex;flex-direction:column;gap:.5rem;padding:.3rem 0">
+        <div style="text-align:center;color:var(--muted);font-size:.75rem;padding:1rem">جاري تحميل المتصدرين...</div>
+      </div>
+      <div class="sec-ttl" style="margin-top:1rem">📊 إحصائياتك</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;padding:.3rem 0">
+        <div style="background:var(--card2);border-radius:12px;padding:.7rem;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:1.2rem;font-weight:900;color:var(--g2)" id="myStatFuel">—</div>
+          <div style="font-size:.62rem;color:var(--muted)">الوقود الحالي</div>
+        </div>
+        <div style="background:var(--card2);border-radius:12px;padding:.7rem;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:1.2rem;font-weight:900;color:var(--g1)" id="myStatWins">—</div>
+          <div style="font-size:.62rem;color:var(--muted)">الانتصارات</div>
+        </div>
+        <div style="background:var(--card2);border-radius:12px;padding:.7rem;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:1.2rem;font-weight:900;color:#a29bfe" id="myStatScore">—</div>
+          <div style="font-size:.62rem;color:var(--muted)">النقاط</div>
+        </div>
+        <div style="background:var(--card2);border-radius:12px;padding:.7rem;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:1.2rem;font-weight:900;color:var(--gold)" id="myStatLevel">—</div>
+          <div style="font-size:.62rem;color:var(--muted)">المستوى</div>
+        </div>
+      </div>
+      <button onclick="PlayerData.save();toast('💾 تم الحفظ!')" style="width:100%;margin-top:.8rem;padding:.55rem;border:none;border-radius:12px;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;font-family:Tajawal,sans-serif;font-weight:700;font-size:.82rem;cursor:pointer">💾 حفظ الآن</button>
+    </div>
+          <div class="trophy-res win">فوز</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+</div>
+<audio id="bgMusic" loop preload="auto">
+  <source src="https://archive.org/download/SoftPianoMusicSleepingMusic/Calm%20Piano%20Music.mp3" type="audio/mpeg">
+</audio>
+<div id="toast"></div>
+
+<script>
+// ==================== MULTIPLAYER & VOICE SYSTEM (Firebase) ====================
+
+// Firebase config — مشروع awalem-game ✅
+const FB_CONFIG = {
+  apiKey: "AIzaSyB7dxh49AS3EMjU_IbkPyJInX1Fe7DsaPA",
+  authDomain: "awalem-game.firebaseapp.com",
+  databaseURL: "https://awalem-game-default-rtdb.firebaseio.com",
+  projectId: "awalem-game",
+  storageBucket: "awalem-game.firebasestorage.app",
+  messagingSenderId: "34905451178",
+  appId: "1:34905451178:web:3367593469105f728afed3",
+  measurementId: "G-06G9EDR6E3"
+};
+
+const FB_READY = true; // Config حقيقي ✅
+
+// Firebase محمّل مسبقاً في الـ head
+async function loadFirebase() {
+  if (!FB_READY) return false;
+  initFirebaseApp();
+  return typeof firebase !== 'undefined';
+}
+class RoomNetwork {
+  constructor() {
+    this.roomId = null;
+    this.userName = null;
+    this.userEmail = null;
+    this.userId = 'u_' + Math.random().toString(36).substr(2, 9);
+    this.peers = new Map();
+    this.connected = false;
+    this.onMessage = null;
+    // transport layers
+    this.fb = null;          // Firebase ref
+    this.fbPresence = null;
+    this.channel = null;     // BroadcastChannel fallback
+    this.mode = 'none';      // 'firebase' | 'broadcast' | 'localStorage'
+  }
+
+  async join(roomId, userName, userEmail) {
+    this.roomId = roomId;
+    this.userName = userName;
+    this.userEmail = userEmail;
+
+    // --- Firebase فقط إذا كان الـ config مكتملاً ---
+    if (FB_READY) {
+      this._showBanner('connecting', '🔄 جاري الاتصال عبر الإنترنت...');
+      const loaded = await loadFirebase();
+      if (loaded) {
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+        const db = firebase.database();
+        await Promise.race([
+          db.ref('.info/connected').once('value'),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000))
+        ]);
+        this.fb = db.ref('rooms/' + roomId + '/messages');
+        this.fbPresence = db.ref('rooms/' + roomId + '/presence/' + this.userId);
+        await this.fbPresence.set({ name: userName, email: userEmail, ts: Date.now() });
+        this.fbPresence.onDisconnect().remove();
+        const joinedAt = Date.now();
+        this.fb.orderByChild('ts').startAt(joinedAt).on('child_added', snap => {
+          const data = snap.val();
+          if (data && data.senderId !== this.userId) this._handleMessage(data);
+        });
+        db.ref('rooms/' + roomId + '/presence').on('value', snap => {
+          this.peers.clear();
+          snap.forEach(child => {
+            const v = child.val();
+            if (child.key !== this.userId) this.peers.set(child.key, { name: v.name, userId: child.key });
+          });
+          this._updateUI();
+        });
+        this.mode = 'firebase';
+        this.connected = true;
+        this._showBanner('live', '🔥 متصل عبر الإنترنت · الغرفة ' + roomId);
+      } catch(e) {
+        this._startFallback();
+      }
+      } else { this._startFallback(); }
+    } else {
+      // --- BroadcastChannel مباشرةً (نفس الجهاز، تبويبات متعددة) ---
+      this._startFallback();
+    }
+
+    this.broadcast({ type: 'join', name: userName, email: userEmail });
+    setInterval(() => this.broadcast({ type: 'heartbeat', name: this.userName }), 5000);
+    setInterval(() => this._cleanupPeers(), 15000);
+    this._updateUI();
+  }
+
+  _startFallback() {
+    if (typeof BroadcastChannel !== 'undefined') {
+      this.channel = new BroadcastChannel('awalem_' + this.roomId);
+      this.channel.onmessage = e => this._handleMessage(e.data);
+      this.mode = 'broadcast';
+    } else {
+      window.addEventListener('storage', e => {
+        if (e.key && e.key.startsWith('aw_' + this.roomId)) {
+          try { const d = JSON.parse(e.newValue); if(d && d.senderId !== this.userId) this._handleMessage(d); } catch(err){}
+        }
+      });
+      this.mode = 'localStorage';
+    }
+    this.connected = true;
+    this._showBanner('live', '✅ متصل بالغرفة ' + this.roomId + ' · (محلي — نفس الجهاز)');
+  }
+
+  broadcast(data) {
+    const payload = { ...data, roomId: this.roomId, senderId: this.userId, name: this.userName, ts: Date.now() };
+    if (this.mode === 'firebase' && this.fb) {
+      this.fb.push(payload).catch(() => {});
+      // تنظيف الرسائل القديمة (أكثر من ساعة)
+      const cutoff = Date.now() - 3600000;
+      this.fb.orderByChild('ts').endAt(cutoff).limitToFirst(20).once('value', snap => {
+        snap.forEach(child => child.ref.remove());
+      });
+    } else if (this.mode === 'broadcast' && this.channel) {
+      this.channel.postMessage(payload);
+    } else if (this.mode === 'localStorage') {
+      const key = 'aw_' + this.roomId + '_' + Date.now() + '_' + Math.random();
+      localStorage.setItem(key, JSON.stringify(payload));
+      setTimeout(() => localStorage.removeItem(key), 8000);
+    }
+  }
+
+  _handleMessage(data) {
+    if (!data || data.senderId === this.userId) return;
+    this.peers.set(data.senderId, { name: data.name || 'مجهول', userId: data.senderId, lastSeen: Date.now() });
+    if (this.onMessage) this.onMessage(data);
+    switch (data.type) {
+      case 'fuel':       if (data.fuel !== undefined) setFuel(data.fuel, false); break;
+      case 'chat':       if (data.text) addRemoteChat(data.name, data.text, data.bg, data.mediaHTML); break;
+      case 'wood':       if (data.amount) { setFuel(fuel + data.amount, false); showWoodEffect(); } break;
+      case 'tribe':      if (data.tribeIndex !== undefined && data.tribeIndex !== currentTribe) switchTribe(data.tribeIndex, false); break;
+      case 'challenge':  if (data.challenge) showIncomingChallenge(data.challenge); break;
+      case 'game':       if (data.action === 'open') openGameModal(false); else if (data.action === 'close') closeGame(false); break;
+      case 'voice-offer':
+      case 'voice-answer':
+      case 'voice-ice':  if (window.voiceChat) window.voiceChat.handleSignal(data); break;
+    }
+    this._updateUI();
+  }
+
+  _cleanupPeers() {
+    if (this.mode === 'firebase') return; // Firebase يدير الحضور تلقائياً
+    const now = Date.now();
+    for (const [id, p] of this.peers) { if (now - p.lastSeen > 20000) this.peers.delete(id); }
+    this._updateUI();
+  }
+
+  _updateUI() {
+    const count = this.peers.size + 1;
+    const status = document.getElementById('netStatus');
+    const text = document.getElementById('netText');
+    const badge = document.getElementById('connBadge');
+    if (this.connected) {
+      status.classList.remove('off'); status.classList.add('on');
+      text.textContent = count + ' متصلين';
+      badge.textContent = 'متصل (' + count + ')';
+      badge.classList.remove('off'); badge.classList.add('on');
+    } else {
+      status.classList.add('off'); status.classList.remove('on');
+      text.textContent = 'غير متصل';
+      badge.textContent = 'غير متصل';
+      badge.classList.add('off'); badge.classList.remove('on');
+    }
+  }
+
+  _showBanner(type, msg) {
+    let b = document.getElementById('fbBanner');
+    if (!b) {
+      b = document.createElement('div');
+      b.id = 'fbBanner';
+      b.className = 'fb-banner';
+      document.body.appendChild(b);
+    }
+    b.className = 'fb-banner ' + type;
+    b.textContent = msg;
+    if (type === 'live') setTimeout(() => { b.style.opacity = '0'; setTimeout(() => b.remove(), 500); }, 4000);
+  }
+
+  getPeerList() { return Array.from(this.peers.values()); }
+
+  // legacy alias
+  updateConnectionUI() { this._updateUI(); }
+}
+
+class VoiceChat {
+  constructor(network) {
+    this.network = network;
+    this.localStream = null;
+    this.connections = new Map();   // peerId → RTCPeerConnection
+    this.audioElements = new Map(); // peerId → <audio>
+    this.pendingIce = new Map();    // peerId → [candidates] قبل setRemoteDescription
+    this.muted = true;
+    this.sigRef = null;             // Firebase signaling ref
+    this.sigListeners = new Map();  // peerId → listener
+    this._setupFirebaseSignaling();
+  }
+
+  // ── إعداد Firebase كـ Signaling Channel ──────────────────────────────────
+  _setupFirebaseSignaling() {
+    if (typeof firebase === 'undefined' || !this.network.roomId) return;
+    const db = firebase.database();
+    this.sigRef = db.ref('rooms/' + this.network.roomId + '/signaling/' + this.network.userId);
+    // استمع لإشارات موجهة لي
+    this.sigRef.on('child_added', snap => {
+      const data = snap.val();
+      if (data) {
+        this._handleSignalData(data);
+        snap.ref.remove(); // احذف بعد المعالجة
+      }
+    });
+  }
+
+  // ── إرسال إشارة عبر Firebase مباشرة للهدف ────────────────────────────────
+  async _sendSignal(targetId, data) {
+    if (typeof firebase !== 'undefined' && this.network.mode === 'firebase') {
+      const db = firebase.database();
+      const ref = db.ref('rooms/' + this.network.roomId + '/signaling/' + targetId);
+      await ref.push({ ...data, senderId: this.network.userId, ts: Date.now() });
+    } else {
+      // fallback: broadcast عبر BroadcastChannel
+      this.network.broadcast({ ...data, targetId });
+    }
+  }
+
+  // ── إعداد RTCPeerConnection بخوادم STUN/TURN متعددة ─────────────────────
+  _createPC(peerId) {
+    const ICE_SERVERS = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun.cloudflare.com:3478' },
+        // TURN مجاني من Open Relay (للشبكات التي تحجب STUN)
+        {
+          urls: 'turn:openrelay.metered.ca:80',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        }
+      ],
+      iceCandidatePoolSize: 10
+    };
+
+    const pc = new RTCPeerConnection(ICE_SERVERS);
+    this.connections.set(peerId, pc);
+
+    // أضف المسار الصوتي
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(t => pc.addTrack(t, this.localStream));
+    }
+
+    // استقبل الصوت من الطرف الآخر
+    pc.ontrack = (e) => {
+      if (e.streams && e.streams[0]) this._addRemoteAudio(peerId, e.streams[0]);
+    };
+
+    // أرسل ICE candidates
+    pc.onicecandidate = (e) => {
+      if (e.candidate) {
+        this._sendSignal(peerId, {
+          type: 'voice-ice',
+          candidate: e.candidate.toJSON()
+        });
+      }
+    };
+
+    // مراقبة الاتصال
+    pc.onconnectionstatechange = () => {
+      const state = pc.connectionState;
+      if (state === 'connected') {
+        toast('🎤 متصل صوتياً بـ ' + (this.network.peers.get(peerId)?.name || peerId));
+      } else if (state === 'failed') {
+        pc.restartIce();
+      } else if (state === 'disconnected') {
+        setTimeout(() => {
+          if (pc.connectionState === 'disconnected') {
+            this._removePeer(peerId);
+          }
+        }, 5000);
+      }
+    };
+
+    return pc;
+  }
+
+  // ── طلب الميكروفون ────────────────────────────────────────────────────────
+  async init() {
+    try {
+      this.localStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 48000,
+          channelCount: 1
+        }
+      });
+      this.localStream.getAudioTracks().forEach(t => t.enabled = false);
+      // إعداد Firebase بعد الحصول على roomId
+      if (!this.sigRef) this._setupFirebaseSignaling();
+      return true;
+    } catch (e) {
+      toast('❌ لا يمكن الوصول للميكروفون — تحقق من الإذن في المتصفح');
+      return false;
+    }
+  }
+
+  // ── فتح / غلق الميكروفون ─────────────────────────────────────────────────
+  async unmute() {
+    if (!this.localStream) {
+      const ok = await this.init();
+      if (!ok) return;
+    }
+    this.muted = false;
+    this._applyMute();
+    // ابدأ اتصالاً مع كل من في الغرفة
+    for (const [uid] of this.network.peers) {
+      if (!this.connections.has(uid)) await this._callPeer(uid);
+    }
+  }
+
+  mute() {
+    this.muted = true;
+    this._applyMute();
+  }
+
+  _applyMute() {
+    if (this.localStream) {
+      this.localStream.getAudioTracks().forEach(t => { t.enabled = !this.muted; });
+    }
+  }
+
+  // ── بدء اتصال مع peer (المتصل هو من يرسل الـ offer) ──────────────────────
+  async _callPeer(peerId) {
+    if (this.connections.has(peerId)) return;
+    const pc = this._createPC(peerId);
+    const offer = await pc.createOffer({ offerToReceiveAudio: true });
+    await pc.setLocalDescription(offer);
+    await this._sendSignal(peerId, { type: 'voice-offer', offer: { type: offer.type, sdp: offer.sdp } });
+  }
+
+  // ── معالجة الإشارات الواردة ────────────────────────────────────────────────
+  async _handleSignalData(data) {
+    const peerId = data.senderId;
+    if (!peerId || peerId === this.network.userId) return;
+
+    if (data.type === 'voice-offer') {
+      let pc = this.connections.get(peerId);
+      if (!pc) pc = this._createPC(peerId);
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+        // أضف أي ICE candidates كانت بانتظار setRemoteDescription
+        const pending = this.pendingIce.get(peerId) || [];
+        for (const c of pending) { try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch(e){} }
+        this.pendingIce.delete(peerId);
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        await this._sendSignal(peerId, { type: 'voice-answer', answer: { type: answer.type, sdp: answer.sdp } });
+      } catch(e) { console.warn('voice-offer error:', e); }
+
+    } else if (data.type === 'voice-answer') {
+      const pc = this.connections.get(peerId);
+      if (pc && pc.signalingState === 'have-local-offer') {
+        try { await pc.setRemoteDescription(new RTCSessionDescription(data.answer)); } catch(e){}
+      }
+
+    } else if (data.type === 'voice-ice') {
+      const pc = this.connections.get(peerId);
+      if (pc && pc.remoteDescription) {
+        try { await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); } catch(e){}
+      } else {
+        // احفظ مؤقتاً حتى تصل setRemoteDescription
+        if (!this.pendingIce.has(peerId)) this.pendingIce.set(peerId, []);
+        this.pendingIce.get(peerId).push(data.candidate);
+      }
+    }
+  }
+
+  // معالجة إشارات BroadcastChannel (fallback)
+  handleSignal(data) {
+    if (data.targetId && data.targetId !== this.network.userId) return;
+    this._handleSignalData(data);
+  }
+
+  // ── إضافة صوت طرف آخر ─────────────────────────────────────────────────────
+  _addRemoteAudio(peerId, stream) {
+    if (this.audioElements.has(peerId)) return;
+    const audio = document.createElement('audio');
+    audio.srcObject = stream;
+    audio.autoplay = true;
+    audio.volume = 1.0;
+    audio.setAttribute('playsinline', '');
+    document.body.appendChild(audio);
+    audio.play().catch(() => {});
+    this.audioElements.set(peerId, audio);
+    // مؤشر بصري للشخص المتحدث
+    this._startVoiceIndicator(peerId, stream);
+  }
+
+  // ── مؤشر بصري عند الكلام ──────────────────────────────────────────────────
+  _startVoiceIndicator(peerId, stream) {
+    try {
+      const ctx = new AudioContext();
+      const src = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      src.connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const tick = () => {
+        if (!this.audioElements.has(peerId)) return;
+        analyser.getByteFrequencyData(data);
+        const vol = data.reduce((a, b) => a + b, 0) / data.length;
+        if (vol > 15) {
+          // أظهر مؤشر الكلام على الأفاتار
+          const name = this.network.peers.get(peerId)?.name;
+          if (name) {
+            const els = document.querySelectorAll('.m-name');
+            els.forEach(el => { if (el.textContent.includes(name)) el.style.color = '#2ed573'; });
+            setTimeout(() => { els.forEach(el => { if (el.textContent.includes(name)) el.style.color = ''; }); }, 500);
+          }
+        }
+        requestAnimationFrame(tick);
+      };
+      tick();
+    } catch(e) {}
+  }
+
+  // ── إزالة peer ────────────────────────────────────────────────────────────
+  _removePeer(peerId) {
+    const pc = this.connections.get(peerId);
+    if (pc) { pc.close(); this.connections.delete(peerId); }
+    const audio = this.audioElements.get(peerId);
+    if (audio) { audio.remove(); this.audioElements.delete(peerId); }
+    this.pendingIce.delete(peerId);
+  }
+
+  // ── إيقاف كل شيء ──────────────────────────────────────────────────────────
+  stop() {
+    this.muted = true;
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(t => t.stop());
+      this.localStream = null;
+    }
+    for (const [id] of this.connections) this._removePeer(id);
+    if (this.sigRef) this.sigRef.off();
+  }
+
+  // legacy
+  async toggle() {
+    if (!this.muted) { this.mute(); return false; }
+    else { await this.unmute(); return true; }
+  }
+
+  async connectToPeer(peerId) { await this._callPeer(peerId); }
+}
+
+let roomNetwork = null;
+let voiceChat = null;
+let chatVoiceActive = false;
+let gameVoiceActive = false;
+
+// ==================== FIREBASE AUTH ====================
+let authMode = 'login'; // 'login' | 'register'
+let currentUser = null;
+
+function switchAuthTab(mode) {
+  authMode = mode;
+  const isReg = mode === 'register';
+  document.getElementById('nameField').style.display = isReg ? 'block' : 'none';
+  document.getElementById('confirmField').style.display = isReg ? 'block' : 'none';
+  document.getElementById('forgotWrap').style.display = isReg ? 'none' : 'block';
+  document.getElementById('authBtn').textContent = isReg ? '✨ إنشاء حساب' : '🚀 دخول';
+  document.getElementById('authSubtitle').textContent = isReg ? 'أنشئ حسابك وانضم إلى القبيلة' : 'مرحباً بك — ادخل إلى قبيلتك';
+  document.getElementById('tabLogin').style.background = isReg ? 'transparent' : 'linear-gradient(135deg,var(--g1),var(--g2))';
+  document.getElementById('tabLogin').style.color = isReg ? 'var(--muted)' : '#fff';
+  document.getElementById('tabRegister').style.background = isReg ? 'linear-gradient(135deg,var(--g1),var(--g2))' : 'transparent';
+  document.getElementById('tabRegister').style.color = isReg ? '#fff' : 'var(--muted)';
+  showAuthError('');
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  if (msg) { el.textContent = msg; el.style.display = 'block'; }
+  else { el.style.display = 'none'; }
+}
+
+function togglePassVis() {
+  const p = document.getElementById('loginPass');
+  p.type = p.type === 'password' ? 'text' : 'password';
+}
+
+async function doAuth() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const room = 'default';
+  const btn   = document.getElementById('authBtn');
+
+  if (!email || !email.includes('@')) { showAuthError('أدخل بريداً إلكترونياً صالحاً'); return; }
+  if (!pass || pass.length < 6)       { showAuthError('كلمة المرور 6 أحرف على الأقل'); return; }
+
+  btn.textContent = '⏳ جاري...';
+  btn.disabled = true;
+  showAuthError('');
+
+  try {
+    const authLib = await loadFirebaseAuth();
+    if (!authLib) throw new Error('auth-load-failed');
+    const auth = firebase.auth();
+
+    if (authMode === 'register') {
+      const name = document.getElementById('loginName').value.trim();
+      const conf = document.getElementById('loginPassConfirm').value;
+      if (!name)        { showAuthError('أدخل اسمك في اللعبة'); btn.textContent='✨ إنشاء حساب'; btn.disabled=false; return; }
+      if (pass !== conf){ showAuthError('كلمتا المرور غير متطابقتين'); btn.textContent='✨ إنشاء حساب'; btn.disabled=false; return; }
+      const cred = await auth.createUserWithEmailAndPassword(email, pass);
+      await cred.user.updateProfile({ displayName: name });
+      currentUser = cred.user;
+      await _saveUserProfile(cred.user, name);
+      pendingUser = { uid: cred.user.uid, name, email };
+      // حساب جديد — اختر قبيلة
+      document.getElementById('authBox').style.display = 'none';
+      document.getElementById('tribeWelcome').textContent = 'أهلاً ' + name + '!';
+      document.getElementById('tribeBox').style.display = 'block';
+
+    } else {
+    // دخول ناجح — تحقق من القبيلة أولاً
+    currentUser = cred.user;
+    const name = cred.user.displayName || email.split('@')[0];
+    await _saveUserProfile(cred.user, name);
+    pendingUser = { uid: cred.user.uid, name, email };
+    const hasTribe = await _checkExistingTribe(cred.user, name, email);
+    if (!hasTribe) {
+      // أظهر اختيار القبيلة
+      document.getElementById('authBox').style.display = 'none';
+      document.getElementById('tribeWelcome').textContent = 'مرحباً ' + name + '!';
+      document.getElementById('tribeBox').style.display = 'block';
+    }
+    }
+  } catch(e) {
+    btn.textContent = authMode === 'register' ? '✨ إنشاء حساب' : '🚀 دخول';
+    btn.disabled = false;
+    showAuthError(_authErrMsg(e.code));
+  }
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email || !email.includes('@')) { showAuthError('أدخل بريدك الإلكتروني أولاً'); return; }
+  try {
+    const authLib = await loadFirebaseAuth();
+    await firebase.auth().sendPasswordResetEmail(email);
+    showAuthError('');
+    document.getElementById('authHint').textContent = '📧 تم إرسال رابط استعادة كلمة المرور إلى بريدك';
+    document.getElementById('authHint').style.color = '#2ed573';
+  } catch(e) {
+    showAuthError(_authErrMsg(e.code));
+  }
+}
+
+function _authErrMsg(code) {
+  const msgs = {
+    'auth/user-not-found':       'البريد الإلكتروني غير مسجل — أنشئ حساباً جديداً',
+    'auth/wrong-password':       'كلمة المرور خاطئة',
+    'auth/email-already-in-use': 'هذا البريد مسجّل بالفعل — ادخل من تبويب "دخول"',
+    'auth/weak-password':        'كلمة المرور ضعيفة جداً (6 أحرف على الأقل)',
+    'auth/invalid-email':        'صيغة البريد الإلكتروني غير صحيحة',
+    'auth/too-many-requests':    'محاولات كثيرة — انتظر قليلاً ثم حاول مجدداً',
+    'auth/network-request-failed':'خطأ في الاتصال — تحقق من الإنترنت',
+    'auth-load-failed':          'خطأ في تحميل نظام المصادقة',
+  };
+  return msgs[code] || 'حدث خطأ — حاول مجدداً (' + (code || 'unknown') + ')';
+}
+
+async function _saveUserProfile(user, name) {
+  if (typeof firebase === 'undefined') return;
+  const db = firebase.database();
+  await db.ref('users/' + user.uid).update({
+    name, email: user.email, uid: user.uid,
+    lastSeen: Date.now(), avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(name)
+  });
+}
+
+async function loadFirebaseAuth() {
+  initFirebaseApp();
+  return typeof firebase !== 'undefined' && !!firebase.auth;
+}
+
+function initFirebaseApp() {
+  if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp(FB_CONFIG);
+  }
+}
+// هيّئ Firebase فوراً عند تحميل الصفحة
+initFirebaseApp();
+
+function _enterGame(name, email, room, uid) {
+  roomNetwork = new RoomNetwork();
+  roomNetwork.userId = uid; // استخدم uid الحقيقي
+  roomNetwork.join(room, name, email);
+  window.roomNetwork = roomNetwork;
+
+  voiceChat = new VoiceChat(roomNetwork);
+  window.voiceChat = voiceChat;
+  setTimeout(() => { if (voiceChat && !voiceChat.sigRef) voiceChat._setupFirebaseSignaling(); }, 1500);
+
+  myProfile.name = name;
+  myProfile.email = email;
+  document.getElementById('setDispName').textContent = name + ' 🔥';
+  document.getElementById('setDispEmail').textContent = email;
+  document.getElementById('myProfName').textContent = name + ' 🔥';
+  document.getElementById('editName').value = name;
+
+  const avatarUrl = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(name);
+  document.getElementById('myAvatar').src = avatarUrl;
+  document.getElementById('myProfAv').src = avatarUrl;
+  document.getElementById('setAvatar').src = avatarUrl;
+  myProfile.avatar = avatarUrl;
+
+  // تهيئة حفظ البيانات
+  PlayerData.init(uid, name);
+  // تحميل المكافآت اليومية
+  DailyReward.load(uid);
+
+  document.getElementById('loginOverlay').style.display = 'none';
+  toast('🎮 مرحباً ' + name + '! انضممت إلى الغرفة ' + room);
+
+  // الاستماع لإشعارات الغرفة
+  setTimeout(() => { PushNotif.listenRoom(room); updateOnlineRing(); }, 2000);
+
+  roomNetwork.onMessage = (data) => {
+    if (data.type === 'join') {
+      toast('👋 ' + data.name + ' انضم إلى الغرفة!');
+      if (voiceChat && !voiceChat.muted) {
+        setTimeout(() => voiceChat.connectToPeer(data.senderId), 1000);
+      }
+    }
+  };
+}
+
+// تسجيل خروج تلقائي عند إغلاق المتصفح
+window.addEventListener('beforeunload', () => {
+  if (typeof firebase !== 'undefined' && firebase.apps.length) {
+    firebase.auth().signOut().catch(() => {});
+  }
+});
+
+async function doGoogleLogin() {
+  const btn = document.querySelector('button[onclick="doGoogleLogin()"]');
+  if (btn) { btn.textContent = '⏳ جاري...'; btn.disabled = true; }
+  showAuthError('');
+  try {
+    initFirebaseApp();
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    const room = 'default';
+    const cred = await firebase.auth().signInWithPopup(provider);
+    const user = cred.user;
+    const name = user.displayName || user.email.split('@')[0];
+    currentUser = user;
+    // حفظ الأفاتار من Google
+    myProfile.avatar = user.photoURL || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(name);
+    await firebase.database().ref('users/' + user.uid).update({ name, email: user.email, uid: user.uid, lastSeen: Date.now(), avatar: myProfile.avatar });
+    pendingUser = { uid: user.uid, name, email: user.email };
+    if (user.photoURL) {
+      document.getElementById('myAvatar').src = user.photoURL;
+      document.getElementById('myProfAv').src = user.photoURL;
+      document.getElementById('setAvatar').src = user.photoURL;
+    }
+    const hasTribe = await _checkExistingTribe(user, name, user.email);
+    if (!hasTribe) {
+      document.getElementById('authBox').style.display = 'none';
+      document.getElementById('tribeWelcome').textContent = 'أهلاً ' + name + '!';
+      document.getElementById('tribeBox').style.display = 'block';
+    }
+  } catch(e) {
+    if (btn) { btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> دخول بـ Google'; btn.disabled = false; }
+    if (e.code === 'auth/popup-blocked') {
+      showAuthError('المتصفح منع النافذة المنبثقة — سمح بها من إعدادات المتصفح أو استخدم الدخول بالإيميل');
+    } else if (e.code !== 'auth/popup-closed-by-user') {
+      showAuthError(_authErrMsg(e.code));
+    }
+  }
+}
+
+function doLogin() { doAuth(); } // legacy alias
+
+function toggleChatVoice() {
+  if (!voiceChat) { toast('🎤 انضم إلى غرفة أولاً'); return; }
+  const btn = document.getElementById('chatVoiceBtn');
+  if (!chatVoiceActive) {
+    voiceChat.unmute();
+    chatVoiceActive = true;
+    btn.classList.add('on');
+    btn.innerHTML = '🔊';
+    toast('🎤 الميكروفون مفتوح!');
+  } else {
+    chatVoiceActive = false;
+    if (!gameVoiceActive) voiceChat.mute();
+    btn.classList.remove('on');
+    btn.innerHTML = '🎤';
+    toast('🔇 الميكروفون مغلق');
+  }
+}
+
+function toggleGameVoice() {
+  if (!voiceChat) { toast('🎤 انضم إلى غرفة أولاً'); return; }
+  const btn = document.getElementById('gameVoiceBtn');
+  const txt = document.getElementById('gameVoiceText');
+  if (!gameVoiceActive) {
+    voiceChat.unmute();
+    gameVoiceActive = true;
+    btn.classList.add('on');
+    txt.textContent = 'الصوت مفعل';
+    toast('🎤 صوت اللعبة مفعل!');
+  } else {
+    gameVoiceActive = false;
+    if (!chatVoiceActive) voiceChat.mute();
+    btn.classList.remove('on');
+    txt.textContent = 'تفعيل الصوت';
+    toast('🔇 صوت اللعبة مغلق');
+  }
+}
+
+function addRemoteChat(name, text, bg, mediaHTML) {
+  const msgs = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  d.className = 'cm';
+  const fire = text.includes('🪵') || text.includes('🔥') || text.includes('⚔️');
+  const imgSrc = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(name);
+  d.innerHTML = '<div class="cm-av" style="background:' + (bg || 'linear-gradient(135deg,#7c3aff,#5b21b6)') + '"><img src="' + imgSrc + '" alt=""></div><div class="cm-body"><div class="cm-n">' + name + '</div><div class="cm-t' + (fire ? ' fire' : '') + '">' + text + (mediaHTML || '') + '</div></div>';
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showWoodEffect() {
+  const fz = document.getElementById('fireZone');
+  const r = fz.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + 28;
+  const chip = document.createElement('div');
+  chip.className = 'wood-chip'; chip.textContent = '🪵';
+  chip.style.left = (cx - 14) + 'px'; chip.style.top = cy + 'px';
+  document.body.appendChild(chip);
+  setTimeout(() => chip.remove(), 1300);
+  for (let i = 0; i < 14; i++) {
+    const sp = document.createElement('div');
+    sp.className = 'spark';
+    sp.style.left = (cx + (Math.random() - .5) * 28) + 'px';
+    sp.style.top = (cy + 8) + 'px';
+    sp.style.setProperty('--sx', (Math.random() - .5) * 110 + 'px');
+    sp.style.setProperty('--sy', (-25 - Math.random() * 90) + 'px');
+    sp.style.animationDuration = (.3 + Math.random() * .5) + 's';
+    sp.style.background = ['#ff6b1a', '#ffcc44', '#fff', '#ff9500'][Math.floor(Math.random() * 4)];
+    document.body.appendChild(sp);
+    setTimeout(() => sp.remove(), 900);
+  }
+}
+
+function showIncomingChallenge(chal) {
+  const inc = document.getElementById('incoming');
+  inc.querySelector('.in-name').textContent = chal.target;
+  inc.querySelector('.in-sub').textContent = chal.game + ' · ' + chal.group;
+  inc.style.display = 'block';
+  inc.classList.remove('hid');
+  setTimeout(() => inc.classList.add('hid'), 30000);
+}
+
+// ==================== ORIGINAL CODE (MODIFIED FOR SYNC) ====================
+
+const TRIBES = [
+  {id:'light',name:'فرسان الضوء',logo:'🔥',color:'#ff6b1a',level:12,wins:47,rank:'المركز الثالث عالمياً',members:[
+    {id:'fahd',n:'فهد',i:'ف',bg:'linear-gradient(135deg,#3b82f6,#1d4ed8)',online:true,w:3,e:'🎨',wins:12,bio:'فنان القبيلة. أحب الرسم والألوان وأساعد فريقي دائماً.'},
+    {id:'mariam',n:'مريم',i:'م',bg:'linear-gradient(135deg,#a855f7,#7c3aed)',online:true,w:5,e:'🌸',wins:18,bio:'أميرة الضوء. لا أخسر أبداً وأحب التحديات القوية.'},
+    {id:'sami',n:'سامي',i:'س',bg:'linear-gradient(135deg,#7c3aff,#5b21b6)',online:true,w:2,e:'👑',wins:22,bio:'قائد القبيلة. أدير الفريق بقوة وحماس.'},
+    {id:'stella',n:'ستيلا',i:'س',bg:'linear-gradient(135deg,#fbbf24,#d97706)',online:true,w:4,e:'⭐',wins:9,bio:'نجمة القبيلة. سريعة وذكية في كل التحديات.'},
+    {id:'nora',n:'نورا',i:'ن',bg:'linear-gradient(135deg,#ec4899,#be185d)',online:false,w:1,e:'🌿',wins:7,bio:'حكيمة القبيلة. أظهرت دائماً بحنكتي.'},
+    {id:'salman',n:'سلمان',i:'ص',bg:'linear-gradient(135deg,#5b8aff,#3b5fe2)',online:false,w:0,e:'🔮',wins:5,bio:'ساحر القبيلة. أحل الألغاز بسرعة البرق.'}
+  ]},
+  {id:'storm',name:'عاصفة الصحراء',logo:'⚔️',color:'#7c3aff',level:9,wins:31,rank:'المركز السابع عالمياً',members:[
+    {id:'khaled',n:'خالد',i:'خ',bg:'linear-gradient(135deg,#ef4444,#b91c1c)',online:true,w:4,e:'⚔️',wins:14,bio:'محارب شرس. أهاجم بلا رحمة.'},
+    {id:'laila',n:'ليلى',i:'ل',bg:'linear-gradient(135deg,#06b6d4,#0891b2)',online:true,w:2,e:'🌙',wins:8,bio:'هادئة لكنها قاتلة في الليل.'},
+    {id:'omar',n:'عمر',i:'ع',bg:'linear-gradient(135deg,#84cc16,#4d7c0f)',online:false,w:1,e:'🛡️',wins:6,bio:'درع القبيلة. أحمي الجميع.'},
+    {id:'hana',n:'هنا',i:'ه',bg:'linear-gradient(135deg,#f472b6,#db2777)',online:true,w:3,e:'✨',wins:11,bio:'سريعة كالبرق. لا يمكن الإمساك بي.'}
+  ]},
+  {id:'dragon',name:'تنانين الشمال',logo:'🐉',color:'#10b981',level:15,wins:62,rank:'المركز الأول عالمياً',members:[
+    {id:'zaid',n:'زيد',i:'ز',bg:'linear-gradient(135deg,#f59e0b,#d97706)',online:true,w:6,e:'🐉',wins:25,bio:'تنين القبيلة. أحرق الأعداء بناري.'},
+    {id:'rana',n:'رنا',i:'ر',bg:'linear-gradient(135deg,#8b5cf6,#6d28d9)',online:false,w:2,e:'❄️',wins:10,bio:'جليدية. أتجمد الأعداء ببسمتي.'},
+    {id:'tariq',n:'طارق',i:'ط',bg:'linear-gradient(135deg,#14b8a6,#0f766e)',online:true,w:4,e:'🌊',wins:16,bio:'مدمر الأمواج. أجتاح الجميع.'},
+    {id:'yasmin',n:'ياسمين',i:'ي',bg:'linear-gradient(135deg,#ec4899,#be185d)',online:true,w:5,e:'🌺',wins:19,bio:'زهرة القبيلة. جميلة لكنها خطيرة.'},
+    {id:'basem',n:'باسم',i:'ب',bg:'linear-gradient(135deg,#3b82f6,#1d4ed8)',online:false,w:1,e:'⚡',wins:7,bio:'سريع كالبرق. لا تراني قادماً.'}
+  ]}
+];
+let currentTribe = 0;
+let fuel = 68;
+let musicPlaying = false;
+let musicInit = false;
+let chosenGame = 'حاملو الضوء';
+let chalOpen = false;
+let challengeReady = false;
+let currentPMTarget = null;
+let myProfile = { name: 'سامي', email: '', bio: 'لاعب شغوف في عوالم. أحب التحديات وأبني قبيلتي منذ عام ٢٠٢٤. دائماً جاهز للمعركة!', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=سامي' };
+
+// ==================== نظام حفظ بيانات اللاعب ====================
+const PlayerData = {
+  uid: null,
+  ref: null,
+  saveTimer: null,
+
+  // تهيئة بعد الدخول
+  init(uid, name) {
+    this.uid = uid;
+    if (typeof firebase === 'undefined') return;
+    this.ref = firebase.database().ref('users/' + uid + '/gameData');
+    this.load(name);
+    // حفظ تلقائي كل 30 ثانية
+    this.saveTimer = setInterval(() => this.save(), 30000);
+    // حفظ عند إغلاق الصفحة
+    window.addEventListener('beforeunload', () => this.save());
+  },
+
+  // تحميل البيانات من Firebase
+  async load(name) {
+    if (!this.ref) return;
+    try {
+      const snap = await this.ref.once('value');
+      const data = snap.val();
+      if (data) {
+        // استعادة البيانات المحفوظة
+        if (data.fuel !== undefined) setFuel(data.fuel, false);
+        if (data.woodUsage) woodUsage = data.woodUsage;
+        // تحديث الإحصائيات في الواجهة
+        if (data.wins !== undefined)   _updateStat('wins',   data.wins);
+        if (data.score !== undefined)  _updateStat('score',  data.score);
+        if (data.members !== undefined)_updateStat('members',data.members);
+        if (data.level !== undefined)  _updateStat('level',  data.level);
+        toast('💾 استُعيدت بياناتك · المستوى ' + (data.level || 1));
+      }
+    } catch(e) { console.warn('load error:', e); }
+  },
+
+  // حفظ البيانات في Firebase
+  save() {
+    if (!this.ref) return;
+    const wins    = parseInt(document.getElementById('statWins')?.textContent)    || 0;
+    const score   = parseInt(document.getElementById('statScore')?.textContent)   || 0;
+    const members = parseInt(document.getElementById('statMembers')?.textContent) || 0;
+    const level   = parseInt(document.getElementById('statLevel')?.textContent)   || 1;
+    this.ref.set({
+      fuel, wins, score, members, level,
+      woodUsage, name: myProfile.name,
+      lastSeen: Date.now(),
+      savedAt: new Date().toISOString()
+    }).catch(() => {});
+    // تحديث لوحة المتصدرين
+    this._updateLeaderboard(wins, score, level);
+  },
+
+  // تحديث لوحة المتصدرين
+  _updateLeaderboard(wins, score, level) {
+    if (!this.uid || typeof firebase === 'undefined') return;
+    const room = window.roomNetwork?.roomId || 'global';
+    firebase.database().ref('leaderboard/' + room + '/' + this.uid).set({
+      name: myProfile.name,
+      avatar: myProfile.avatar,
+      wins, score, level,
+      ts: Date.now()
+    }).catch(() => {});
+  }
+};
+
+function _updateStat(id, val) {
+  const el = document.getElementById('stat' + id.charAt(0).toUpperCase() + id.slice(1));
+  if (el) el.textContent = val;
+}
+
+// مراقبة تغيير الوقود للحفظ
+const _origSetFuel = window.setFuel;
+function patchSetFuelForSave() {
+  const orig = setFuel;
+  window._setFuelPatched = true;
+}
+
+// Wood usage tracking: 3 times per hour per user
+let woodUsage = { count: 3, lastReset: Date.now() };
+const WOOD_LIMIT = 3;
+const WOOD_RESET_MS = 3600000; // 1 hour
+const WOOD_BOOST = 5; // 5% per use
+
+function getCurrentMembers() { return TRIBES[currentTribe].members; }
+
+function switchTribe(idx, broadcast = true) {
+  currentTribe = idx;
+  const t = TRIBES[idx];
+  document.getElementById('tribeLogoBtn').textContent = t.logo;
+  document.getElementById('tribeIconTop').textContent = t.logo;
+  document.getElementById('tribeNameTop').innerHTML = '<span>' + t.logo + '</span>' + t.name;
+  document.getElementById('tribeLvlTop').textContent = 'المستوى ' + toAr(t.level);
+  document.getElementById('panelFlame').textContent = t.logo;
+  document.getElementById('panelName').textContent = t.name;
+  document.getElementById('panelSub').textContent = t.rank;
+  document.getElementById('panelLvl').textContent = toAr(t.level);
+  document.getElementById('panelWins').textContent = toAr(t.wins);
+  document.getElementById('panelCount').textContent = toAr(t.members.length);
+  renderTribeMenus();
+  placeMembers();
+  renderMembersList();
+  if (broadcast && roomNetwork) roomNetwork.broadcast({ type: 'tribe', tribeIndex: idx });
+}
+
+function toAr(n) {
+  const map = { '0': '٠', '1': '١', '2': '٢', '3': '٣', '4': '٤', '5': '٥', '6': '٦', '7': '٧', '8': '٨', '9': '٩' };
+  return String(n).replace(/[0-9]/g, d => map[d] || d);
+}
+
+function renderTribeMenus() {
+  const menu = document.getElementById('tribeMenu');
+  let html = '';
+  TRIBES.forEach((t, i) => {
+    const on = i === currentTribe ? ' on' : '';
+    html += '<div class="tribe-opt' + on + '" onclick="switchTribe(' + i + ');toggleTribeMenu();">' + t.logo + ' ' + t.name + '</div>';
+  });
+  menu.innerHTML = html;
+}
+
+function toggleTribeMenu() {
+  document.getElementById('tribeMenu').classList.toggle('on');
+}
+
+document.addEventListener('click', e => {
+  const btn = document.getElementById('tribeLogoBtn');
+  const menu = document.getElementById('tribeMenu');
+  if (!btn.contains(e.target) && !menu.contains(e.target)) menu.classList.remove('on');
+});
+
+function placeMembers() {
+  const wrap = document.getElementById('membersWrap');
+  wrap.innerHTML = '';
+  const scene = document.getElementById('scene');
+  const sw = scene.offsetWidth, sh = scene.offsetHeight;
+  const fx = sw * .5, fy = sh * .72;
+  const rx = Math.min(sw * .48, 380), ry = sh * .38;
+  const members = getCurrentMembers().filter(m => m.online);
+  const total = members.length;
+  if (total === 0) return;
+  members.forEach((m, idx) => {
+    const angle = (2 * Math.PI / total) * idx - Math.PI / 2;
+    const mx = fx + rx * Math.cos(angle);
+    const my = fy + ry * Math.sin(angle);
+    const d = document.createElement('div');
+    d.className = 'member online';
+    d.style.cssText = 'left:' + (mx - 30) + 'px;top:' + (my - 32) + 'px';
+    const imgSrc = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(m.n);
+    d.innerHTML = '<div class="m-av" style="background:' + m.bg + ';animation-delay:' + (idx * .55) + 's"><img src="' + imgSrc + '" alt="' + m.i + '"><div class="m-dot"></div></div><div class="m-name">' + m.e + ' ' + m.n + '</div>';
+    d.onclick = () => openMemberProfile(m.id);
+    wrap.appendChild(d);
+  });
+}
+
+placeMembers();
+window.addEventListener('resize', placeMembers);
+
+function renderMembersList() {
+  const list = document.getElementById('membersList');
+  if (!list) return;
+  list.innerHTML = '';
+  const members = getCurrentMembers();
+  const onl = members.filter(m => m.online).length;
+  document.getElementById('onlineC').textContent = onl + ' متصلين';
+  members.forEach(m => {
+    const r = document.createElement('div');
+    r.className = 'mrow';
+    const imgSrc = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(m.n);
+    r.innerHTML = '<div class="mr-av" style="background:' + m.bg + '"><img src="' + imgSrc + '" alt="' + m.i + '"><div class="mr-d' + (m.online ? '' : ' off') + '"></div></div><div class="mr-info"><div class="mr-n">' + m.n + ' ' + m.e + '</div><div class="mr-f">' + (m.online ? 'أضاف ' + m.w + ' وقود اليوم' : 'غير متصل') + '</div></div>' + (m.w > 0 ? '<div class="mr-w">🪵×' + m.w + '</div>' : '<div class="mr-off">غائب</div>');
+    r.onclick = () => openMemberProfile(m.id);
+    list.appendChild(r);
+  });
+}
+
+renderMembersList();
+
+function switchPanel(panelName, el) {
+  document.querySelectorAll('.panel-section').forEach(s => s.classList.remove('on'));
+  document.getElementById('panel-' + panelName).classList.add('on');
+  document.querySelectorAll('.p-tab').forEach(t => t.classList.remove('on'));
+  if (el) el.classList.add('on');
+  document.querySelectorAll('.sb-btn[data-panel]').forEach(b => { b.classList.toggle('on', b.dataset.panel === panelName); });
+  // تحميل لوحة المتصدرين عند فتح تبويب النتائج
+  if (panelName === 'trophy') { loadLeaderboard(); _refreshMyStats(); }
+}
+
+const pC = document.getElementById('particles');
+function mkParticle() {
+  const fz = document.getElementById('fireZone');
+  if (!fz) return;
+  const r = fz.getBoundingClientRect();
+  const cx = r.left + r.width / 2;
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.left = (cx + (Math.random() - .5) * 55) + 'px';
+  p.style.top = (r.top + 18) + 'px';
+  p.style.setProperty('--dx', (Math.random() - .5) * 75 + 'px');
+  const sz = 1.5 + Math.random() * 3.8;
+  p.style.width = sz + 'px'; p.style.height = sz + 'px';
+  p.style.background = ['#ff6b1a', '#ff9500', '#ffcc44', '#ff3300', '#ffd700'][Math.floor(Math.random() * 5)];
+  const dur = 1.3 + Math.random() * 2.2;
+  p.style.animationDuration = dur + 's';
+  p.style.animationDelay = Math.random() * .5 + 's';
+  p.style.filter = 'blur(' + Math.random().toFixed(1) + 'px)';
+  pC.appendChild(p);
+  setTimeout(() => p.remove(), (dur + .7) * 1000);
+}
+
+setInterval(mkParticle, 95);
+
+function setFuel(v, broadcast = true) {
+  fuel = Math.min(100, Math.max(5, v));
+  const p = Math.round(fuel);
+  document.getElementById('fuelFill').style.width = p + '%';
+  document.getElementById('panelFuel').style.width = p + '%';
+  document.getElementById('fuelPct').textContent = toAr(p) + '٪';
+  document.getElementById('panelFuelV').textContent = '🔥' + toAr(p);
+  document.getElementById('fuelLbl').textContent = 'طاقة النار · ' + toAr(p) + '٪';
+  const s = .5 + (fuel / 100) * .95;
+  document.getElementById('flO').style.cssText += ';height:' + Math.round(132 * s) + 'px;width:' + Math.round(92 * s) + 'px';
+  document.getElementById('flM').style.cssText += ';height:' + Math.round(102 * s) + 'px;width:' + Math.round(62 * s) + 'px';
+  document.getElementById('flI').style.cssText += ';height:' + Math.round(78 * s) + 'px';
+  document.getElementById('flC').style.cssText += ';height:' + Math.round(48 * s) + 'px';
+  document.getElementById('sceneGlow').style.opacity = .35 + (fuel / 100) * 1.0;
+  const gg = document.getElementById('gglow');
+  const gw = Math.round(170 + (fuel / 100) * 180);
+  gg.style.width = gw + 'px';
+  gg.style.opacity = .45 + (fuel / 100) * .7;
+  const w = Math.round((fuel / 100) * 30);
+  document.getElementById('scene').style.background = 'radial-gradient(ellipse at 50% 100%, rgba(' + (22 + w) + ',8,0,.96) 0%, rgba(' + (10 + w) + ',0,5,.98) 45%, #06060f 100%)';
+  if (broadcast && roomNetwork) roomNetwork.broadcast({ type: 'fuel', fuel: fuel });
+}
+
+setFuel(68);
+setInterval(() => { if (fuel > 5) setFuel(fuel - 1) }, 3600000);
+
+function checkWoodLimit() {
+  const now = Date.now();
+  if (now - woodUsage.lastReset >= WOOD_RESET_MS) {
+    woodUsage.count = WOOD_LIMIT;
+    woodUsage.lastReset = now;
+  }
+  return woodUsage.count;
+}
+
+function updateWoodHint() {
+  const remaining = checkWoodLimit();
+  const hint = document.getElementById('woodHint');
+  const btn = document.getElementById('woodSceneBtn');
+  hint.textContent = 'متبقي ' + toAr(remaining) + '/' + toAr(WOOD_LIMIT) + ' استخدامات هذه الساعة';
+  if (remaining <= 0) {
+    btn.disabled = true;
+    hint.style.color = '#ff4757';
+  } else {
+    btn.disabled = false;
+    hint.style.color = 'var(--muted)';
+  }
+}
+
+updateWoodHint();
+setInterval(updateWoodHint, 60000);
+
+function addWood() {
+  const remaining = checkWoodLimit();
+  if (remaining <= 0) {
+    toast('⏳ استنفدت محاولاتك! انتظر الساعة القادمة');
+    return;
+  }
+
+  woodUsage.count--;
+  updateWoodHint();
+
+  const fz = document.getElementById('fireZone');
+  const r = fz.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + 28;
+  const chip = document.createElement('div');
+  chip.className = 'wood-chip'; chip.textContent = '🪵';
+  chip.style.left = (cx - 14) + 'px'; chip.style.top = cy + 'px';
+  document.body.appendChild(chip);
+  setTimeout(() => chip.remove(), 1300);
+  for (let i = 0; i < 14; i++) {
+    const sp = document.createElement('div');
+    sp.className = 'spark';
+    sp.style.left = (cx + (Math.random() - .5) * 28) + 'px';
+    sp.style.top = (cy + 8) + 'px';
+    sp.style.setProperty('--sx', (Math.random() - .5) * 110 + 'px');
+    sp.style.setProperty('--sy', (-25 - Math.random() * 90) + 'px');
+    sp.style.animationDuration = (.3 + Math.random() * .5) + 's';
+    sp.style.background = ['#ff6b1a', '#ffcc44', '#fff', '#ff9500'][Math.floor(Math.random() * 4)];
+    document.body.appendChild(sp);
+    setTimeout(() => sp.remove(), 900);
+  }
+  setFuel(fuel + WOOD_BOOST);
+  toast('🪵 وقود أضيف! +' + toAr(WOOD_BOOST) + ' طاقة 🔥');
+  chat('أ', '🪵 أضفت وقود للنار! 🔥', 'linear-gradient(135deg,#7c3aff,#5b21b6)', 'أنت');
+  if (roomNetwork) roomNetwork.broadcast({ type: 'wood', amount: WOOD_BOOST });
+}
+
+function toggleChal() {
+  // Block challenge if fuel < 50%
+  if (fuel < 50) {
+    toast('🔥 النار ضعيفة! أضف وقوداً حتى تصل إلى ٥٠٪ على الأقل');
+    return;
+  }
+  chalOpen ? closeChal() : openChal();
+}
+
+function openChal() {
+  chalOpen = true;
+  const o = document.getElementById('chalOverlay'), m = document.getElementById('chalModal');
+  o.style.display = 'block'; m.style.display = 'block';
+  setTimeout(() => m.classList.add('on'), 10);
+}
+
+function closeChal() {
+  chalOpen = false;
+  const o = document.getElementById('chalOverlay'), m = document.getElementById('chalModal');
+  m.classList.remove('on');
+  setTimeout(() => { m.style.display = 'none'; o.style.display = 'none' }, 230);
+}
+
+function pickGame(el) {
+  document.querySelectorAll('.chal-game').forEach(g => g.classList.remove('on'));
+  el.classList.add('on');
+  chosenGame = el.textContent.trim();
+}
+
+function sendChal() {
+  const t = document.getElementById('chalTarget').value.trim();
+  if (!t) { document.getElementById('chalTarget').focus(); return; }
+  const groupOnly = document.getElementById('groupOnly').checked;
+  closeChal();
+  if (roomNetwork) {
+    roomNetwork.broadcast({
+      type: 'challenge',
+      challenge: { target: t, game: chosenGame, group: groupOnly ? 'داخل القروب' : 'عام' }
+    });
+  }
+  toast('⚔️ تحدي أُرسل إلى "' + t + '"' + (groupOnly ? ' (داخل القروب)' : ''));
+  chat('أ', '⚔️ أرسلت تحدياً إلى ' + t + '!', 'linear-gradient(135deg,#7c3aff,#5b21b6)', 'أنت');
+  document.getElementById('chalTarget').value = '';
+}
+
+function acceptIn() { document.getElementById('incoming').style.display = 'none'; toast('⚔️ قبلت التحدي! جهّز فريقك') }
+function denyIn() { document.getElementById('incoming').style.display = 'none'; toast('❌ رُفض التحدي') }
+setTimeout(() => {
+  const inc = document.getElementById('incoming');
+  if (inc) inc.classList.add('hid');
+}, 60000);
+
+function toggleChallengeReady() {
+  // Also block if fuel < 50%
+  if (fuel < 50) {
+    toast('🔥 النار ضعيفة! أضف وقوداً أولاً');
+    return;
+  }
+  challengeReady = !challengeReady;
+  const el = document.getElementById('chalReady');
+  if (challengeReady) {
+    el.classList.add('on');
+    toast('✅ أنت الآن مستعد للتحدي!');
+    chat('أ', '⚔️ أنا مستعد لأي تحدي!', 'linear-gradient(135deg,#7c3aff,#5b21b6)', 'أنت');
+  } else {
+    el.classList.remove('on');
+    toast('⏸️ تم إلغاء وضع الاستعداد');
+  }
+}
+
+function openGameModal(broadcast = true) {
+  const o = document.getElementById('gameOverlay'), m = document.getElementById('gameModal');
+  document.getElementById('gameFrame').src = 'sandbox:///mnt/agents/upload/map71_modified.html';
+  o.style.display = 'block'; m.style.display = 'flex';
+  setTimeout(() => m.classList.add('on'), 10);
+  if (broadcast && roomNetwork) roomNetwork.broadcast({ type: 'game', action: 'open' });
+}
+
+function closeGame(broadcast = true) {
+  // Stop game voice when closing
+  if (gameVoiceActive && voiceChat) {
+    voiceChat.stop();
+    gameVoiceActive = false;
+    const btn = document.getElementById('gameVoiceBtn');
+    const txt = document.getElementById('gameVoiceText');
+    btn.classList.remove('on');
+    txt.textContent = 'تفعيل الصوت';
+  }
+  const o = document.getElementById('gameOverlay'), m = document.getElementById('gameModal');
+  m.classList.remove('on');
+  setTimeout(() => { m.style.display = 'none'; o.style.display = 'none'; document.getElementById('gameFrame').src = ''; }, 250);
+  if (broadcast && roomNetwork) roomNetwork.broadcast({ type: 'game', action: 'close' });
+}
+
+function chat(id, txt, bg, name, mediaHTML = '') {
+  const msgs = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  d.className = 'cm';
+  const fire = txt.includes('🪵') || txt.includes('🔥') || txt.includes('⚔️');
+  const imgSrc = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(name);
+  d.innerHTML = '<div class="cm-av" style="background:' + bg + '"><img src="' + imgSrc + '" alt="' + id + '"></div><div class="cm-body"><div class="cm-n">' + name + '</div><div class="cm-t' + (fire ? ' fire' : '') + '">' + txt + mediaHTML + '</div></div>';
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendMsg() {
+  const inp = document.getElementById('chatI');
+  const txt = inp.value.trim(); if (!txt) return;
+  chat('أ', txt, 'linear-gradient(135deg,#7c3aff,#5b21b6)', 'أنت');
+  inp.value = '';
+  if (txt.includes('🪵') || txt.includes('وقود')) { setFuel(fuel + 2); toast('🔥 +٢ طاقة'); }
+  if (roomNetwork) {
+    roomNetwork.broadcast({ type: 'chat', text: txt, bg: 'linear-gradient(135deg,#7c3aff,#5b21b6)', mediaHTML: '' });
+  }
+}
+
+function handleMedia(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const url = e.target.result;
+    let mediaHTML = '';
+    if (file.type.startsWith('image/')) { mediaHTML = '<br><img src="' + url + '" alt="صورة">'; }
+    else if (file.type.startsWith('video/')) { mediaHTML = '<br><video src="' + url + '" controls></video>'; }
+    chat('أ', '📎 مرفق وسائط', 'linear-gradient(135deg,#7c3aff,#5b21b6)', 'أنت', mediaHTML);
+    if (roomNetwork) {
+      roomNetwork.broadcast({ type: 'chat', text: '📎 مرفق وسائط', bg: 'linear-gradient(135deg,#7c3aff,#5b21b6)', mediaHTML: mediaHTML });
+    }
+    toast('📎 تم إرسال الوسائط');
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function openMemberProfile(memberId) {
+  const members = getCurrentMembers();
+  const m = members.find(x => x.id === memberId);
+  if (!m) return;
+  currentPMTarget = m;
+  const imgSrc = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(m.n);
+  document.getElementById('profAv').querySelector('img').src = imgSrc;
+  document.getElementById('profName').textContent = m.n + ' ' + m.e;
+  const statusEl = document.getElementById('profStatus');
+  statusEl.innerHTML = '<div class="dot' + (m.online ? '' : ' off') + '"></div><span>' + (m.online ? 'متصل الآن' : 'غير متصل') + '</span>';
+  document.getElementById('profBio').textContent = m.bio || 'لا يوجد وصف.';
+  document.getElementById('profWood').textContent = toAr(m.w);
+  document.getElementById('profWins').textContent = toAr(m.wins || 0);
+  document.getElementById('profLevel').textContent = toAr(TRIBES[currentTribe].level);
+  document.getElementById('pmChat').classList.remove('on');
+  document.getElementById('pmMsgs').innerHTML = '';
+  const o = document.getElementById('profOverlay'), modal = document.getElementById('profModal');
+  o.style.display = 'block'; modal.style.display = 'block';
+  setTimeout(() => modal.classList.add('on'), 10);
+}
+
+function closeMemberProfile() {
+  const o = document.getElementById('profOverlay'), m = document.getElementById('profModal');
+  m.classList.remove('on');
+  setTimeout(() => { m.style.display = 'none'; o.style.display = 'none' }, 250);
+  currentPMTarget = null;
+}
+
+function startPrivateChat() {
+  document.getElementById('pmChat').classList.add('on');
+  if (currentPMTarget) {
+    const msgs = document.getElementById('pmMsgs');
+    msgs.innerHTML = '<div style="text-align:center;font-size:.6rem;color:var(--muted);margin:.5rem 0">بدأت دردشة مع ' + currentPMTarget.n + '</div>';
+  }
+}
+
+function sendPM() {
+  const inp = document.getElementById('pmInp');
+  const txt = inp.value.trim(); if (!txt) return;
+  const msgs = document.getElementById('pmMsgs');
+  const d = document.createElement('div');
+  d.style.cssText = 'align-self:flex-end;background:linear-gradient(135deg,#7c3aff,#5b21b6);padding:6px 10px;border-radius:11px;font-size:.75rem;max-width:85%;word-break:break-word';
+  d.textContent = txt;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+  inp.value = '';
+  setTimeout(() => {
+    if (currentPMTarget) {
+      const r = document.createElement('div');
+      r.style.cssText = 'align-self:flex-start;background:var(--card2);border:1px solid var(--border);padding:6px 10px;border-radius:11px;font-size:.75rem;max-width:85%';
+      r.textContent = 'رد ' + currentPMTarget.n + ': مرحباً! 👋';
+      msgs.appendChild(r);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+  }, 1500);
+}
+
+function openMyProfile() {
+  document.getElementById('myProfAv').src = myProfile.avatar;
+  document.getElementById('myProfName').textContent = myProfile.name + ' 🔥';
+  document.getElementById('myProfBio').textContent = myProfile.bio;
+  const o = document.getElementById('myProfOverlay'), m = document.getElementById('myProfModal');
+  o.style.display = 'block'; m.style.display = 'block';
+  setTimeout(() => m.classList.add('on'), 10);
+}
+
+function closeMyProfile() {
+  const o = document.getElementById('myProfOverlay'), m = document.getElementById('myProfModal');
+  m.classList.remove('on');
+  setTimeout(() => { m.style.display = 'none'; o.style.display = 'none' }, 250);
+}
+
+function openSettings() {
+  const o = document.getElementById('setOverlay'), m = document.getElementById('setModal');
+  o.style.display = 'block'; m.style.display = 'block';
+  setTimeout(() => m.classList.add('on'), 10);
+}
+
+function closeSettings() {
+  const o = document.getElementById('setOverlay'), m = document.getElementById('setModal');
+  m.classList.remove('on');
+  setTimeout(() => { m.style.display = 'none'; o.style.display = 'none' }, 250);
+}
+
+function updateAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    myProfile.avatar = e.target.result;
+    document.getElementById('setAvatar').src = e.target.result;
+    document.getElementById('myAvatar').src = e.target.result;
+    document.getElementById('myProfAv').src = e.target.result;
+    toast('✅ تم تحديث الصورة');
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveProfile() {
+  const name = document.getElementById('editName').value.trim();
+  const bio = document.getElementById('editBio').value.trim();
+  if (name) myProfile.name = name;
+  if (bio) myProfile.bio = bio;
+  document.getElementById('setDispName').textContent = myProfile.name + ' 🔥';
+  document.getElementById('myProfName').textContent = myProfile.name + ' 🔥';
+  document.getElementById('myProfBio').textContent = myProfile.bio;
+  toast('💾 تم حفظ الملف الشخصي');
+}
+
+const audio = document.getElementById('bgMusic');
+function initMusic() {
+  if (!musicInit) {
+    audio.volume = document.getElementById('volSlider').value;
+    audio.play().catch(() => { });
+    musicInit = true;
+    musicPlaying = true;
+    document.getElementById('musicToggle').textContent = '⏸️';
+  }
+}
+document.addEventListener('click', initMusic, { once: true });
+document.addEventListener('touchstart', initMusic, { once: true });
+
+function toggleMusic() {
+  const btn = document.getElementById('musicToggle');
+  if (musicPlaying) {
+    audio.pause();
+    musicPlaying = false;
+    btn.textContent = '▶️';
+    toast('⏸️ توقفت الموسيقى');
+  } else {
+    audio.volume = document.getElementById('volSlider').value;
+    audio.play().catch(() => toast('🔇 اضغط على الصفحة أولاً'));
+    musicPlaying = true;
+    btn.textContent = '⏸️';
+    toast('🎵 بدأت الموسيقى الهادئة');
+  }
+}
+
+function setVolume(v) { audio.volume = v; }
+
+const botMsgs = [
+  { i: 'ف', n: 'فهد', bg: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', msgs: ['النار تحتاج وقود 🪵', 'فريقنا الأقوى ⚔️'] },
+  { i: 'م', n: 'مريم', bg: 'linear-gradient(135deg,#a855f7,#7c3aed)', msgs: ['🔥🔥 يالله شباب', 'أضفت وقود مزدوج 🪵🪵'] },
+  { i: 'ن', n: 'نورا', bg: 'linear-gradient(135deg,#ec4899,#be185d)', msgs: ['أحبكم ❤️🔥', 'جاهزة للتحدي 💪'] },
+  { i: 'ص', n: 'سلمان', bg: 'linear-gradient(135deg,#5b8aff,#3b5fe2)', msgs: ['متى التحدي؟', '🪵 وقود!'] },
+];
+let bi = 0;
+setInterval(() => {
+  const b = botMsgs[bi % botMsgs.length];
+  const t = b.msgs[Math.floor(Math.random() * b.msgs.length)];
+  chat(b.i, t, b.bg, b.n);
+  if (t.includes('🪵')) setFuel(fuel + 2);
+  bi++;
+}, 9000);
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+renderTribeMenus();
+
+// ===== إصلاح الكيبورد في الجوال =====
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    if (window.innerWidth > 768) return;
+    const panel = document.querySelector('.panel');
+    if (panel) {
+      const h = window.visualViewport.height;
+      panel.style.maxHeight = (h - 48 - 54) + 'px';
+    }
+    setTimeout(() => {
+      const msgs = document.getElementById('chatMsgs');
+      if (msgs) msgs.scrollTop = msgs.scrollHeight;
+    }, 100);
+  });
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const inp = document.getElementById('chatI');
+  if (inp) {
+    inp.addEventListener('focus', () => {
+      setTimeout(() => {
+        const msgs = document.getElementById('chatMsgs');
+        if (msgs) msgs.scrollTop = msgs.scrollHeight;
+      }, 500);
+    });
+  }
+});
+function loadLeaderboard() {
+  if (typeof firebase === 'undefined' || !window.roomNetwork?.roomId) return;
+  const room = window.roomNetwork.roomId;
+  const ref = firebase.database().ref('leaderboard/' + room);
+  ref.orderByChild('score').limitToLast(10).on('value', snap => {
+    const list = [];
+    snap.forEach(child => list.unshift({ uid: child.key, ...child.val() }));
+    _renderLeaderboard(list);
+  });
+  // تحديث إحصائياتي
+  _refreshMyStats();
+}
+
+function _renderLeaderboard(list) {
+  const el = document.getElementById('leaderboardList');
+  if (!el) return;
+  if (!list.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.75rem;padding:1rem">لا يوجد لاعبون بعد — كن الأول!</div>'; return; }
+  const medals = ['🥇','🥈','🥉'];
+  el.innerHTML = list.map((p, i) => `
+    <div style="display:flex;align-items:center;gap:.6rem;background:var(--card2);border-radius:12px;padding:.55rem .7rem;border:1px solid ${i===0?'rgba(255,215,0,.2)':'var(--border)'}">
+      <div style="font-size:1.1rem;min-width:24px;text-align:center">${medals[i] || (i+1)}</div>
+      <img src="${p.avatar||'https://api.dicebear.com/7.x/avataaars/svg?seed='+encodeURIComponent(p.name)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name||'مجهول'}</div>
+        <div style="font-size:.6rem;color:var(--muted)">المستوى ${p.level||1} · ${p.wins||0} فوز</div>
+      </div>
+      <div style="font-size:.82rem;font-weight:900;color:var(--gold)">${p.score||0} 🔥</div>
+    </div>
+  `).join('');
+}
+
+function _refreshMyStats() {
+  const wins  = document.getElementById('statWins')?.textContent  || '0';
+  const score = document.getElementById('statScore')?.textContent || '0';
+  const level = document.getElementById('statLevel')?.textContent || '1';
+  const myFuel = Math.round(fuel) || 0;
+  const mw = document.getElementById('myStatWins');   if(mw) mw.textContent = wins;
+  const ms = document.getElementById('myStatScore');  if(ms) ms.textContent = score;
+  const ml = document.getElementById('myStatLevel');  if(ml) ml.textContent = level;
+  const mf = document.getElementById('myStatFuel');   if(mf) mf.textContent = myFuel + '%';
+}
+setInterval(_refreshMyStats, 5000);
+
+// أفاتارات المتصلين حول النار
+function updateOnlineRing() {
+  const ring = document.getElementById('onlinePlayersRing');
+  if (!ring || !window.roomNetwork) return;
+  const peers = window.roomNetwork.getPeerList();
+  const all = [
+    { name: myProfile.name, avatar: myProfile.avatar, isMe: true },
+    ...peers.map(p => ({ name: p.name, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(p.name||'x'), isMe: false }))
+  ];
+  const positions = [
+    { bottom:'30%', left:'15%' }, { bottom:'30%', right:'15%' },
+    { bottom:'20%', left:'6%'  }, { bottom:'20%', right:'6%'  },
+    { bottom:'38%', left:'26%' }, { bottom:'38%', right:'26%' },
+  ];
+  ring.innerHTML = all.slice(0, 6).map((p, i) => {
+    const pos = positions[i] || { bottom:'25%', left:(5+i*15)+'%' };
+    const styleStr = Object.entries(pos).map(([k,v])=>`${k}:${v}`).join(';');
+    return `<div style="position:absolute;${styleStr};text-align:center;z-index:6" title="${p.name}">
+      <img src="${p.avatar}" style="width:34px;height:34px;border-radius:50%;border:2px solid ${p.isMe?'var(--gold)':'rgba(255,255,255,.25)'};box-shadow:0 2px 10px rgba(0,0,0,.5)">
+      <div style="font-size:.48rem;color:rgba(255,255,255,.65);margin-top:.1rem;max-width:42px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
+      <div style="width:7px;height:7px;background:#2ed573;border-radius:50%;position:absolute;top:0;right:0;border:1.5px solid var(--bg)"></div>
+    </div>`;
+  }).join('');
+}
+setInterval(updateOnlineRing, 5000);
+
+// ==================== أعضاء القبيلة الحقيقيون ====================
+let currentTribeData = null;
+let currentTribeId = null;
+
+function loadTribeMembers(tribeId) {
+  if (!tribeId || typeof firebase === 'undefined') return;
+  currentTribeId = tribeId;
+  firebase.database().ref('tribes/' + tribeId + '/members').on('value', snap => {
+    const members = [];
+    snap.forEach(c => members.push({ uid: c.key, ...c.val() }));
+    _renderMembers(members);
+  });
+  // استمع للحضور الحقيقي
+  firebase.database().ref('rooms/' + tribeId + '/presence').on('value', snap => {
+    const online = {};
+    snap.forEach(c => { online[c.key] = true; });
+    window._onlineMembers = online;
+    _refreshMembersOnline();
+  });
+}
+
+function _renderMembers(members) {
+  const el = document.getElementById('membersList');
+  if (!el) return;
+  const online = window._onlineMembers || {};
+  const count = Object.keys(online).length;
+  document.getElementById('onlineC').textContent = count + ' متصل';
+
+  if (!members.length) {
+    el.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.75rem">لا يوجد أعضاء بعد</div>';
+    return;
+  }
+
+  el.innerHTML = members.map(m => {
+    const isOnline = online[m.uid] || m.uid === window.roomNetwork?.userId;
+    const avatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(m.name || 'x');
+    const roleIcon = m.role === 'leader' ? '👑' : '⚔️';
+    return `
+      <div class="mrow" onclick="openMemberProfile('${m.uid}','${m.name}')">
+        <div class="mr-av" style="position:relative">
+          <img src="${avatar}" alt="${m.name}">
+          <div class="mr-d ${isOnline ? '' : 'off'}"></div>
+        </div>
+        <div class="mr-info">
+          <div class="mr-n">${m.name || 'عضو'} ${roleIcon}</div>
+          <div class="mr-f" style="font-size:.58rem;color:var(--muted)">${isOnline ? '🟢 متصل الآن' : '⚫ غير متصل'}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function _refreshMembersOnline() {
+  const online = window._onlineMembers || {};
+  document.querySelectorAll('.mr-d').forEach(dot => {
+    const row = dot.closest('.mrow');
+    if (!row) return;
+  });
+}
+
+function copyInviteCode() {
+  if (!currentTribeData?.inviteCode) { toast('⚠️ لا يوجد كود دعوة بعد'); return; }
+  const code = currentTribeData.inviteCode;
+  const link = `https://majed132010.github.io/awalem-game`;
+  navigator.clipboard?.writeText(`انضم لقبيلتي في عوالم!\nكود الدعوة: ${code}\n${link}`)
+    .then(() => toast(`🔗 تم نسخ كود الدعوة: ${code}`))
+    .catch(() => toast(`كود الدعوة: ${code}`));
+}
+
+function openMemberProfile(uid, name) {
+  toast('👤 ' + name);
+}
+const TRIBE_EMOJIS = ['🔥','⚡','🌊','🌪️','🏔️','🌙','🦅','🐉','🗡️','🛡️','🔮','💎'];
+let selectedTribeEmoji = '🔥';
+let pendingUser = null; // يحفظ بيانات المستخدم ريثما يختار القبيلة
+
+function _initEmojiPicker() {
+  const el = document.getElementById('tribeEmojiPicker');
+  if (!el) return;
+  el.innerHTML = TRIBE_EMOJIS.map(e =>
+    `<button onclick="selectTribeEmoji('${e}')" style="padding:.4rem;border:1.5px solid var(--border);border-radius:8px;background:var(--card2);font-size:1.2rem;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--g1)'" onmouseout="this.style.borderColor='var(--border)'">${e}</button>`
+  ).join('');
+}
+
+function selectTribeEmoji(e) {
+  selectedTribeEmoji = e;
+  document.getElementById('selectedEmoji').textContent = e;
+}
+
+function showTribeChoice() {
+  document.getElementById('authBox').style.display = 'none';
+  document.getElementById('tribeBox').style.display = 'block';
+  document.getElementById('createTribeBox').style.display = 'none';
+  document.getElementById('joinTribeBox').style.display = 'none';
+}
+
+function showCreateTribe() {
+  document.getElementById('tribeBox').style.display = 'none';
+  document.getElementById('createTribeBox').style.display = 'block';
+  _initEmojiPicker();
+}
+
+function showJoinTribe() {
+  document.getElementById('tribeBox').style.display = 'none';
+  document.getElementById('joinTribeBox').style.display = 'block';
+}
+
+// إنشاء قبيلة جديدة
+async function doCreateTribe() {
+  const name = document.getElementById('tribeName').value.trim();
+  const errEl = document.getElementById('createTribeError');
+  const btn = document.getElementById('createTribeBtn');
+  errEl.style.display = 'none';
+  if (!name) { errEl.textContent = 'أدخل اسم القبيلة'; errEl.style.display = 'block'; return; }
+  if (!pendingUser) return;
+
+  btn.textContent = '⏳ جاري الإنشاء...'; btn.disabled = true;
+  try {
+    const db = firebase.database();
+    // إنشاء كود دعوة فريد
+    const inviteCode = Math.random().toString(36).substr(2, 6).toUpperCase();
+    const tribeId = 'tribe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    const tribeData = {
+      id: tribeId, name, emoji: selectedTribeEmoji,
+      inviteCode, leader: pendingUser.uid, leaderName: pendingUser.name,
+      members: { [pendingUser.uid]: { name: pendingUser.name, role: 'leader', joinedAt: Date.now() } },
+      createdAt: Date.now(), fuel: 68, wins: 0
+    };
+    await db.ref('tribes/' + tribeId).set(tribeData);
+    await db.ref('users/' + pendingUser.uid + '/tribeId').set(tribeId);
+    // أظهر كود الدعوة
+    toast(`🏕️ تم إنشاء قبيلة "${name}"! كود الدعوة: ${inviteCode}`);
+    _startGame(pendingUser, tribeId, tribeData);
+  } catch(e) {
+    errEl.textContent = 'حدث خطأ: ' + e.message; errEl.style.display = 'block';
+    btn.textContent = '🏕️ إنشاء القبيلة'; btn.disabled = false;
+  }
+}
+
+// البحث عن قبيلة
+async function searchTribes(query) {
+  const el = document.getElementById('tribeSearchResults');
+  if (!query || query.length < 2) { el.innerHTML = ''; return; }
+  try {
+    const db = firebase.database();
+    const snap = await db.ref('tribes').orderByChild('name').startAt(query).endAt(query + '\uf8ff').limitToFirst(5).once('value');
+    const results = [];
+    snap.forEach(c => results.push(c.val()));
+    if (!results.length) {
+      el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.72rem;padding:.5rem">لا توجد قبائل بهذا الاسم</div>';
+      return;
+    }
+    el.innerHTML = results.map(t => `
+      <div onclick="selectTribeToJoin('${t.id}')" style="display:flex;align-items:center;gap:.6rem;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:.55rem .7rem;cursor:pointer" onmouseover="this.style.borderColor='var(--g1)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:1.3rem">${t.emoji||'🔥'}</span>
+        <div style="flex:1">
+          <div style="font-size:.8rem;font-weight:700;color:var(--text)">${t.name}</div>
+          <div style="font-size:.62rem;color:var(--muted)">${Object.keys(t.members||{}).length} أعضاء · القائد: ${t.leaderName||'—'}</div>
+        </div>
+        <span style="font-size:.7rem;color:var(--g2)">انضم ←</span>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+function selectTribeToJoin(tribeId) {
+  document.getElementById('inviteCode').value = tribeId;
+  document.getElementById('inviteCode').style.borderColor = 'var(--g1)';
+}
+
+// الانضمام لقبيلة بالكود أو ID
+async function doJoinTribe() {
+  const input = document.getElementById('inviteCode').value.trim().toUpperCase();
+  const errEl = document.getElementById('joinTribeError');
+  const btn = document.getElementById('joinTribeBtn');
+  errEl.style.display = 'none';
+  if (!input) { errEl.textContent = 'أدخل كود الدعوة أو ابحث عن قبيلة'; errEl.style.display = 'block'; return; }
+  if (!pendingUser) return;
+
+  btn.textContent = '⏳ جاري الانضمام...'; btn.disabled = true;
+  try {
+    const db = firebase.database();
+    let tribeData = null, tribeId = null;
+    // بحث بكود الدعوة
+    const snap = await db.ref('tribes').orderByChild('inviteCode').equalTo(input).once('value');
+    snap.forEach(c => { tribeId = c.key; tribeData = c.val(); });
+    // أو بالـ ID مباشرة
+    if (!tribeData && input.startsWith('TRIBE_')) {
+      const s2 = await db.ref('tribes/' + input.toLowerCase()).once('value');
+      if (s2.exists()) { tribeId = s2.key; tribeData = s2.val(); }
+    }
+    if (!tribeData) {
+      errEl.textContent = 'كود الدعوة غير صحيح — تحقق منه وحاول مجدداً';
+      errEl.style.display = 'block'; btn.textContent = '🔍 انضمام'; btn.disabled = false; return;
+    }
+    // أضف العضو
+    await db.ref('tribes/' + tribeId + '/members/' + pendingUser.uid).set({ name: pendingUser.name, role: 'member', joinedAt: Date.now() });
+    await db.ref('users/' + pendingUser.uid + '/tribeId').set(tribeId);
+    toast(`✅ انضممت إلى قبيلة "${tribeData.name}"!`);
+    _startGame(pendingUser, tribeId, tribeData);
+  } catch(e) {
+    errEl.textContent = 'حدث خطأ: ' + e.message; errEl.style.display = 'block';
+    btn.textContent = '🔍 انضمام'; btn.disabled = false;
+  }
+}
+
+// بدء اللعبة بعد اختيار القبيلة
+function _startGame(user, tribeId, tribeData) {
+  document.getElementById('loginOverlay').style.display = 'none';
+  currentTribeData = tribeData;
+  currentTribeId = tribeId;
+  _enterGame(user.name, user.email, tribeId, user.uid);
+  // تحميل أعضاء القبيلة
+  loadTribeMembers(tribeId);
+  if (tribeData) {
+    document.getElementById('tribeNameTop').innerHTML = `<span id="tribeIconTop">${tribeData.emoji||'🔥'}</span>${tribeData.name}`;
+    document.getElementById('panelName').textContent = tribeData.name;
+    document.getElementById('panelSub').textContent = `${Object.keys(tribeData.members||{}).length} أعضاء`;
+    toast(`🏕️ ${tribeData.emoji} ${tribeData.name} · كود: ${tribeData.inviteCode}`);
+  }
+}
+
+// تحقق عند الدخول: هل للمستخدم قبيلة موجودة؟
+async function _checkExistingTribe(user, name, email) {
+  try {
+    const snap = await firebase.database().ref('users/' + user.uid + '/tribeId').once('value');
+    const tribeId = snap.val();
+    if (tribeId) {
+      const tribeSnap = await firebase.database().ref('tribes/' + tribeId).once('value');
+      if (tribeSnap.exists()) {
+        _startGame({ uid: user.uid, name, email }, tribeId, tribeSnap.val());
+        return true;
+      }
+    }
+  } catch(e) {}
+  return false;
+}
+const DAILY_REWARDS = [
+  { icon:'🔥', amount:10, label:'وقود',  desc:'مكافأة اليوم الأول',     fuel:10, score:5   },
+  { icon:'⚡', amount:15, label:'وقود',  desc:'يومان متتاليان!',        fuel:15, score:10  },
+  { icon:'🌟', amount:20, label:'وقود',  desc:'ثلاثة أيام متتالية!',    fuel:20, score:20  },
+  { icon:'💎', amount:25, label:'وقود',  desc:'أربعة أيام — رائع!',     fuel:25, score:35  },
+  { icon:'🏆', amount:30, label:'وقود',  desc:'خمسة أيام — بطل!',      fuel:30, score:50  },
+  { icon:'👑', amount:40, label:'وقود',  desc:'ستة أيام — أسطورة!',    fuel:40, score:75  },
+  { icon:'🔮', amount:50, label:'وقود',  desc:'أسبوع كامل — مذهل! 🎉', fuel:50, score:100 },
+];
+
+const DailyReward = {
+  data: null,
+
+  async load(uid) {
+    if (typeof firebase === 'undefined') return;
+    const snap = await firebase.database().ref('users/' + uid + '/dailyReward').once('value');
+    this.data = snap.val() || { lastClaim: 0, streak: 0, totalDays: 0 };
+    this._check();
+  },
+
+  _check() {
+    const now = Date.now();
+    const last = this.data.lastClaim || 0;
+    const diff = now - last;
+    const ONE_DAY = 86400000;
+    const TWO_DAYS = ONE_DAY * 2;
+
+    if (diff < ONE_DAY) return; // استلم اليوم بالفعل
+    if (diff >= TWO_DAYS) {
+      // انقطعت السلسلة
+      if (this.data.streak > 0) {
+        this.data.streak = 0;
+      }
+    }
+    // أظهر مودال المكافأة بعد ثانيتين من الدخول
+    setTimeout(() => this._showModal(), 2000);
+  },
+
+  _showModal() {
+    const streak = this.data.streak % 7;
+    const reward = DAILY_REWARDS[streak];
+    const overlay = document.getElementById('dailyRewardOverlay');
+    if (!overlay) return;
+
+    // نص السلسلة
+    document.getElementById('dailyStreakText').textContent =
+      this.data.streak > 0 ? `سلسلة ${this.data.streak} يوم متتالي 🔥` : 'ابدأ سلسلتك اليومية!';
+
+    // المكافأة
+    document.getElementById('dailyRewardIcon').textContent = reward.icon;
+    document.getElementById('dailyRewardAmount').textContent = '+' + reward.fuel + ' وقود + ' + reward.score + ' نقطة';
+    document.getElementById('dailyRewardDesc').textContent = reward.desc;
+
+    // شبكة الأيام
+    const grid = document.getElementById('dailyDaysGrid');
+    grid.innerHTML = DAILY_REWARDS.map((r, i) => {
+      const claimed = i < streak;
+      const isToday = i === streak;
+      return `<div class="day-box ${claimed?'claimed':''} ${isToday?'today':''}">
+        <span class="day-ico">${r.icon}</span>
+        <div style="font-size:.5rem">${i+1}</div>
+      </div>`;
+    }).join('');
+
+    overlay.style.display = 'flex';
+  },
+
+  async claim(uid) {
+    const streak = this.data.streak % 7;
+    const reward = DAILY_REWARDS[streak];
+    this.data.streak = (this.data.streak || 0) + 1;
+    this.data.lastClaim = Date.now();
+    this.data.totalDays = (this.data.totalDays || 0) + 1;
+
+    // تطبيق المكافأة
+    setFuel(Math.min(100, fuel + reward.fuel));
+    // إضافة النقاط
+    const scoreEl = document.getElementById('statScore');
+    if (scoreEl) {
+      const cur = parseInt(scoreEl.textContent) || 0;
+      scoreEl.textContent = cur + reward.score;
+    }
+
+    // حفظ في Firebase
+    await firebase.database().ref('users/' + uid + '/dailyReward').set(this.data);
+    PlayerData.save();
+
+    // إغلاق المودال
+    document.getElementById('dailyRewardOverlay').style.display = 'none';
+    toast(`${reward.icon} حصلت على +${reward.fuel} وقود و +${reward.score} نقطة! اليوم ${this.data.streak}`);
+
+    // إشعار للغرفة
+    if (window.roomNetwork?.roomId) {
+      PushNotif.sendToRoom(window.roomNetwork.roomId,
+        '🎁 ' + myProfile.name + ' استلم مكافأته اليومية!',
+        `اليوم ${this.data.streak} من السلسلة ${reward.icon}`,
+        reward.icon
+      );
+    }
+  }
+};
+
+async function claimDailyReward() {
+  if (!currentUser) return;
+  const btn = document.getElementById('claimBtn');
+  btn.textContent = '⏳ جاري...';
+  btn.disabled = true;
+  await DailyReward.claim(currentUser.uid);
+}
+
+function closeDailyReward() {
+  document.getElementById('dailyRewardOverlay').style.display = 'none';
+}
+const VAPID_KEY = 'BHEICBjmqnDovNq3n68iysdMafdgZk_wszZ_peT5O6XovDaXuCe1e6qO2vMq4MrLEPH-cSPEEVfN7k1yJ-53ogw';
+
+const PushNotif = {
+  token: null,
+  enabled: false,
+
+  // طلب الإذن وتسجيل Service Worker
+  async init() {
+    if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+      toast('❌ متصفحك لا يدعم الإشعارات'); return false;
+    }
+    // طلب الإذن
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      toast('❌ لم تسمح بالإشعارات — يمكنك تفعيلها لاحقاً من إعدادات المتصفح');
+      return false;
+    }
+    try {
+      // تسجيل Service Worker
+      const reg = await navigator.serviceWorker.register('/awalem-game/firebase-messaging-sw.js');
+      await navigator.serviceWorker.ready;
+      // الحصول على FCM token
+      const messaging = firebase.messaging();
+      this.token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+      if (this.token) {
+        this.enabled = true;
+        // حفظ الـ token في Firebase
+        if (currentUser) {
+          firebase.database().ref('users/' + currentUser.uid + '/fcmToken').set(this.token);
+        }
+        toast('🔔 الإشعارات مفعّلة!');
+        this._listenForeground();
+        return true;
+      }
+    } catch(e) {
+      console.warn('FCM error:', e);
+      toast('⚠️ تعذّر تفعيل الإشعارات: ' + (e.message || e));
+    }
+    return false;
+  },
+
+  // استقبال الإشعارات عندما يكون التطبيق مفتوحاً
+  _listenForeground() {
+    try {
+      const messaging = firebase.messaging();
+      messaging.onMessage(payload => {
+        const { title, body, icon } = payload.notification || {};
+        this._showInApp(title || '🔔 إشعار جديد', body || '', icon);
+      });
+    } catch(e) {}
+  },
+
+  // إشعار داخل التطبيق (عند كون الصفحة مفتوحة)
+  _showInApp(title, body, icon) {
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position:fixed;top:16px;left:50%;transform:translateX(-50%);
+      z-index:99999;background:var(--card);border:1px solid rgba(255,107,26,.3);
+      border-radius:16px;padding:.75rem 1.1rem;display:flex;align-items:center;
+      gap:.6rem;box-shadow:0 8px 32px rgba(0,0,0,.5);max-width:320px;
+      animation:slideDown .3s ease;font-family:Tajawal,sans-serif;
+    `;
+    el.innerHTML = `
+      <span style="font-size:1.3rem">${icon || '🔔'}</span>
+      <div>
+        <div style="font-size:.8rem;font-weight:700;color:var(--text)">${title}</div>
+        <div style="font-size:.7rem;color:var(--muted)">${body}</div>
+      </div>
+      <span onclick="this.parentElement.remove()" style="margin-right:auto;cursor:pointer;opacity:.5;font-size:.8rem">✕</span>
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 6000);
+  },
+
+  // إرسال إشعار لكل أعضاء الغرفة عبر Firebase
+  async sendToRoom(roomId, title, body, icon = '🔥') {
+    if (typeof firebase === 'undefined') return;
+    const ref = firebase.database().ref('notifications/' + roomId);
+    await ref.push({
+      title, body, icon,
+      from: myProfile.name,
+      fromUid: currentUser?.uid,
+      ts: Date.now()
+    });
+    // احذف بعد دقيقة
+    setTimeout(() => ref.limitToFirst(1).once('value', s => s.forEach(c => c.ref.remove())), 60000);
+  },
+
+  // الاستماع لإشعارات الغرفة
+  listenRoom(roomId) {
+    if (typeof firebase === 'undefined') return;
+    const joinedAt = Date.now();
+    firebase.database().ref('notifications/' + roomId)
+      .orderByChild('ts').startAt(joinedAt)
+      .on('child_added', snap => {
+        const d = snap.val();
+        if (!d || d.fromUid === currentUser?.uid) return;
+        this._showInApp(d.title, d.body, d.icon);
+        // إشعار نظام إذا كانت الصفحة مخفية
+        if (document.hidden && Notification.permission === 'granted') {
+          new Notification(d.title, { body: d.body, icon: '/awalem-game/icon.png' });
+        }
+      });
+  }
+};
+
+// زر تفعيل الإشعارات
+function toggleNotifications() {
+  if (PushNotif.enabled) {
+    toast('🔔 الإشعارات مفعّلة بالفعل');
+  } else {
+    PushNotif.init().then(ok => {
+      if (ok && window.roomNetwork?.roomId) {
+        PushNotif.listenRoom(window.roomNetwork.roomId);
+      }
+    });
+  }
+}
+
+// إشعار عند التحدي
+const _origShowIncoming = window.showIncomingChallenge;
+function showIncomingChallenge(challenge) {
+  if (typeof _origShowIncoming === 'function') _origShowIncoming(challenge);
+  if (window.roomNetwork?.roomId) {
+    PushNotif.sendToRoom(window.roomNetwork.roomId,
+      '⚔️ تحدٍّ جديد!',
+      myProfile.name + ' يتحدى القبيلة!',
+      '⚔️'
+    );
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && voiceChat && !voiceChat.muted) {
+    voiceChat.mute();
+    chatVoiceActive = false; gameVoiceActive = false;
+    const cb = document.getElementById('chatVoiceBtn');
+    const gb = document.getElementById('gameVoiceBtn');
+    const gt = document.getElementById('gameVoiceText');
+    if (cb) { cb.classList.remove('on'); cb.innerHTML = '🎤'; }
+    if (gb) { gb.classList.remove('on'); }
+    if (gt) { gt.textContent = 'تفعيل الصوت'; }
+  }
+});
+</script>
